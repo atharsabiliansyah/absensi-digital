@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Presensi SMK 11 PGRI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -18,7 +21,7 @@
             align-items: center;
             justify-content: center;
             padding: 16px;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .overlay {
             position: absolute;
@@ -77,7 +80,7 @@
 
         <!-- Logo & Header Section -->
         <div style="text-align: center; margin-bottom: 16px;">
-            <div style="position: relative; width: 70px; height: 70px; margin: 0 auto 8px auto; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
+            <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 8px auto; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
                 <img src="{{ asset('images/logo.pgri.png') }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
                 
             </div>
