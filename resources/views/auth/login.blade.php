@@ -49,7 +49,7 @@
         @media (min-width: 768px) {
             body {
                 justify-content: flex-end;
-                padding-right: 60px;
+                padding-right: 120px;
                 padding-left: 0;
             }
             .mobile-view {
