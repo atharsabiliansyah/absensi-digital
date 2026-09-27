@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SMK PGRI 11 CILEDUG - Dashboard Presensi Digital</title>
+    <title> Dashboard - Presensi SMK PGRI 11</title>
     <meta name="description" content="Dashboard Sistem Presensi Digital Siswa Berbasis RFID dan IoT SMK PGRI 11 Ciledug">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
