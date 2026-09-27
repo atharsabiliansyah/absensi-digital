@@ -29,7 +29,7 @@
             background-color: rgba(0, 0, 0, 0.45);
         }
 
-        /* Default: Tampilan Mobile */
+        /* Tampilan Mobile */
         .mobile-view {
             display: block;
             position: relative;
@@ -95,7 +95,7 @@
                 <p style="font-size: 11px; color: #6b7280; margin: 0;">Silahkan masuk menggunakan NIP / Akun Guru</p>
             </div>
 
-            <form action="#" method="POST">
+            <form action="{{ url('/login') }}" method="POST">
                 @csrf
                 <!-- Username -->
                 <div style="margin-bottom: 12px;">
@@ -173,7 +173,7 @@
         </div>
 
         <!-- Form Login Desktop -->
-        <form action="#" method="POST">
+        <form action="{{ url('/login') }}" method="POST">
             @csrf
             
             <!-- Input Username / NIP -->
@@ -186,7 +186,11 @@
                     <input type="text" name="username" required placeholder="Masukkan NIP atau username" 
                         style="width: 100%; padding: 11px 14px 11px 42px; font-size: 13px; background-color: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; outline: none; color: #1f2937;">
                 </div>
-            </div>
+            </div> 
+
+            @error('username')
+             <p style="color: #ef4444; font-size: 11px; margin-top: 4px; margin-bottom: 0;">{{ $message }}</p>
+                @enderror
 
             <!-- Input Password -->
             <div style="margin-bottom: 16px;">
@@ -206,6 +210,9 @@
         </span>
     </div>
 </div>
+            @error('password')
+                <p style="color: #ef4444; font-size: 11px; margin-top: 4px; margin-bottom: 0;">{{ $message }}</p>
+                @enderror
 
             <!-- Remember Me -->
             <div style="margin-bottom: 20px; display: flex; align-items: center;">
