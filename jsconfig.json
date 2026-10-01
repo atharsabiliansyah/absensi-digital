@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "bundler",
+        "paths": {
+            "@/*": ["./resources/js/*"]
+        }
+    },
+    "exclude": ["node_modules", "public", "vendor"]
+}
