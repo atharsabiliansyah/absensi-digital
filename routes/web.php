@@ -1,40 +1,24 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use Inertia\Inertia;
 
-// 1. Tampilkan Halaman Login (GET)
+// Mengarahkan halaman utama langsung ke Dashboard
 Route::get('/', function () {
-    return view('auth.login');
-})->name('login');
-
-// 2. Proses Data Login (POST) -> INI YANG SEBELUMNYA TIDAK ADA
-Route::post('/login', function (Illuminate\Http\Request $request) {
-    $credentials = $request->validate([
-        'username' => ['required'],
-        'password' => ['required'],
-    ]);
-
-    if (Illuminate\Support\Facades\Auth::attempt($credentials)) {
-        $request->session()->regenerate();
-        return redirect()->intended('/dashboard');
-    }
-
-    return back()->withErrors([
-        'username' => 'Username atau password salah.',
-    ])->onlyInput('username');
+    return Inertia::render('Dashboard');
 });
 
-// 3. Halaman Dashboard (Setelah Berhasil Login)
+// Jika Anda ingin rute /dashboard tetap bisa diakses juga
 Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+    return Inertia::render('Dashboard');
+})->name('dashboard');
 
-// 4. Proses Logout (POST)
-Route::post('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    return redirect('/');
-})->name('logout');
+// Manajemen Profil (opsional, jika fitur akun digunakan)
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
