@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export const DEFAULT_PROFILE_PHOTO =
-  'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=240&h=240&q=80';
+export const DEFAULT_PROFILE_PHOTO = '/images/user.png';
 
 const STORAGE_KEY = 'smk_pgri_user_profile_photo';
 

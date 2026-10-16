@@ -147,9 +147,6 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                SMK PGRI 11 CILEDUG • Log Real-time IoT
-              </p>
             </div>
           </div>
 
@@ -175,7 +172,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Semua ({notifications.length})
+              Semua 
             </button>
             <button
               type="button"
@@ -186,7 +183,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Belum Dibaca ({unreadCount})
+              Belum Dibaca 
             </button>
           </div>
 
@@ -211,7 +208,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               </div>
               <p className="text-sm font-bold text-slate-700">Tidak ada notifikasi</p>
               <p className="text-xs text-slate-400 mt-1">
-                Semua notifikasi penting telah ditinjau.
+                Semua notifikasi
               </p>
             </div>
           ) : (
@@ -282,7 +279,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               }}
               className="px-4 py-2 bg-[#1d6ee5] hover:bg-[#1a5fca] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <span>Pantau Presensi Sekarang</span>
+              <span>Pantau Presensi</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}

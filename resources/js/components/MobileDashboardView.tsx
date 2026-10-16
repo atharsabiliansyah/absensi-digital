@@ -45,13 +45,13 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
 
-  // 5 preview students on dashboard
+  
   const previewAttendance = [
     {
       initials: 'IS',
       initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
       nama: 'Isa',
-      kelas: 'XI TKJ',
+      kelas: 'XI', 
       jurusan: 'TKJ',
       status: 'Hadir',
       statusBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
@@ -61,7 +61,7 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
       initials: 'BA',
       initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
       nama: 'Bador',
-      kelas: 'X AKL',
+      kelas: 'X ',
       jurusan: 'AKL',
       status: 'Terlambat',
       statusBg: 'bg-amber-50 text-amber-600 border-amber-200',
@@ -71,7 +71,7 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
       initials: 'CI',
       initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
       nama: 'Citra',
-      kelas: 'XI OTPK',
+      kelas: 'XI ',
       jurusan: 'OTPK',
       status: 'Hadir',
       statusBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
@@ -81,7 +81,7 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
       initials: 'DI',
       initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
       nama: 'Dimas',
-      kelas: 'X BDP',
+      kelas: 'X ',
       jurusan: 'BDP',
       status: 'Hadir',
       statusBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
@@ -91,7 +91,7 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
       initials: 'AN',
       initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
       nama: 'Andi',
-      kelas: 'XI TKJ',
+      kelas: 'XI ',
       jurusan: 'TKJ',
       status: 'Terlambat',
       statusBg: 'bg-amber-50 text-amber-600 border-amber-200',
@@ -99,7 +99,7 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
     },
   ];
 
-  // Full 10 students matching user's left screenshot exactly
+  
   const fullAttendance = [
     {
       initials: 'IS',
@@ -270,7 +270,7 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
         {/* Greeting & Identity */}
         <div className="mt-4 relative z-10">
           <h2 className="text-[17px] font-bold text-white tracking-tight leading-snug">
-            Selamat Datang, Bapak Untung Sudarto
+            Selamat Datang,  Untung Sudarto
           </h2>
           <p className="text-[12px] text-white/80 font-medium mt-0.5">
             NIP. 198705123456

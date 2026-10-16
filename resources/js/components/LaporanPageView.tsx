@@ -222,12 +222,7 @@ export const LaporanPageView: React.FC = () => {
       {/* ======================================================== */}
       {activeMode === 'tabel' && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          {/* 1. Header Title & Breadcrumb */}
-          <div className="text-left">
-            <h1 className="text-2xl sm:text-[32px] font-bold text-[#1e293b] tracking-tight">
-              Laporan Presensi
-            </h1>
-          </div>
+          
 
           {/* 2. Top Filter Card (Periode, Jurusan, Kelas, Status + Tampilkan) */}
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
@@ -475,7 +470,7 @@ export const LaporanPageView: React.FC = () => {
               className="bg-[#059669] hover:bg-[#047857] text-white px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-[13.5px] flex items-center gap-2 transition-all shadow-xs hover:shadow-md cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4 stroke-[2.2]" />
-              <span>Export ke Excel</span>
+              <span>Export Excel</span>
             </button>
           </div>
         </div>

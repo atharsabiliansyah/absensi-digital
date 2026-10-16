@@ -1,20 +1,37 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import { AttendanceRecord } from '../data/mockData';
+
+export interface AttendanceRecord {
+  id: number | string;
+  waktu?: string;
+  waktu_masuk?: string;
+  waktu_pulang?: string | null;
+  nama?: string;
+  kelas?: string;
+  jurusan?: string;
+  status?: string;
+  siswa?: {
+    nama_siswa?: string;
+    kelas?: {
+      nama_kelas?: string;
+      jurusan?: string;
+    };
+  };
+}
 
 interface RecentAttendanceTableProps {
   records: AttendanceRecord[];
-  onViewAllClick: () => void;
+  onViewAllClick?: () => void;
   onSelectRecord?: (record: AttendanceRecord) => void;
 }
 
 export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
-  records,
+  records = [],
   onViewAllClick,
   onSelectRecord,
 }) => {
-  // Show the 2 records matching the screenshot
-  const displayRecords = records.slice(0, 2);
+  // Menampilkan hingga 5 presensi terbaru
+  const displayRecords = records.slice(0, 5);
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-[24px] p-5 sm:p-8 shadow-xs border border-slate-100/90 flex flex-col justify-start">
@@ -24,26 +41,27 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
           <h2 className="text-[17px] sm:text-[22px] font-bold text-slate-800 leading-snug">
             Presensi Terbaru
           </h2>
-          <p className="text-[12px] sm:text-[14px] text-slate-400 font-normal mt-0.5 sm:mt-1">
-            Pemindaian kartu RFID siswa terbaru
-          </p>
         </div>
 
-        <button
-          onClick={onViewAllClick}
-          className="text-[12.5px] sm:text-[14px] font-semibold text-[#2563eb] hover:text-[#1d4ed8] flex items-center gap-0.5 sm:gap-1 cursor-pointer transition-colors group whitespace-nowrap ml-2"
-        >
-          <span>Lihat Semua</span>
-          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-0.5" />
-        </button>
+        {onViewAllClick && (
+          <button
+            type="button"
+            onClick={onViewAllClick}
+            className="text-[12.5px] sm:text-[14px] font-semibold text-[#2563eb] hover:text-[#1d4ed8] flex items-center gap-0.5 sm:gap-1 cursor-pointer transition-colors group whitespace-nowrap ml-2"
+          >
+            <span>Lihat Semua</span>
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        )}
       </div>
 
-      {/* Attendance Table with horizontal scrolling on mobile */}
+      {/* Attendance Table */}
       <div className="w-full overflow-x-auto mt-2 sm:mt-4 pb-2 scrollbar-thin">
-        <table className="w-full text-left border-collapse min-w-[420px] sm:min-w-full">
+        <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-full">
           <thead>
-            <tr className="border-b border-slate-100/80 text-[11px] sm:text-[12px] font-semibold text-slate-400 tracking-wider">
-              <th className="py-3 sm:py-4 px-3 sm:px-4 font-semibold whitespace-nowrap">WAKTU</th>
+            <tr className="border-b border-slate-100/80 text-[11px] sm:text-[12px] font-semibold text-slate-400 tracking-wider uppercase">
+              <th className="py-3 sm:py-4 px-3 sm:px-4 font-semibold whitespace-nowrap">MASUK</th>
+              <th className="py-3 sm:py-4 px-3 sm:px-4 font-semibold whitespace-nowrap">PULANG</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 font-semibold whitespace-normal sm:whitespace-nowrap leading-tight">
                 NAMA<br className="sm:hidden" /> SISWA
               </th>
@@ -53,56 +71,82 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100/60">
-            {displayRecords.map((record) => {
-              const isLate = record.status === 'Terlambat';
-              const isAbsent = record.status === 'Tidak Hadir';
+            {displayRecords.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-slate-400 text-xs sm:text-sm font-medium">
+                  Belum ada presensi hari ini.
+                </td>
+              </tr>
+            ) : (
+              displayRecords.map((record) => {
+                // Ekstraksi nilai jam masuk & pulang (mendukung format API Laravel maupun Mock)
+                const jamMasuk = record.waktu || record.waktu_masuk || '-';
+                const jamPulang = record.waktu_pulang || null;
 
-              return (
-                <tr
-                  key={record.id}
-                  onClick={() => onSelectRecord?.(record)}
-                  className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
-                  title={`Detail presensi ${record.nama}`}
-                >
-                  {/* WAKTU */}
-                  <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14px] text-slate-500 font-mono tracking-tight whitespace-nowrap">
-                    {record.waktu}
-                  </td>
+                // Ekstraksi info siswa
+                const namaSiswa = record.siswa?.nama_siswa || record.nama || '-';
+                const kelasSiswa = record.siswa?.kelas?.nama_kelas || record.kelas || '-';
+                const jurusanSiswa = record.siswa?.kelas?.jurusan || record.jurusan || '-';
 
-                  {/* NAMA SISWA */}
-                  <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13.5px] sm:text-[15px] font-bold text-slate-900 whitespace-nowrap group-hover:text-blue-600 transition-colors">
-                    {record.nama}
-                  </td>
+                const isLate = record.status === 'Terlambat';
+                const isAbsent = record.status === 'Tidak Hadir';
 
-                  {/* KELAS */}
-                  <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14.5px] text-slate-600 font-medium whitespace-nowrap">
-                    {record.kelas}
-                  </td>
+                return (
+                  <tr
+                    key={record.id}
+                    onClick={() => onSelectRecord?.(record)}
+                    className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                    title={`Detail presensi ${namaSiswa}`}
+                  >
+                    {/* WAKTU MASUK */}
+                    <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14px] text-slate-700 font-mono tracking-tight whitespace-nowrap font-semibold">
+                      {jamMasuk}
+                    </td>
 
-                  {/* JURUSAN */}
-                  <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14.5px] text-slate-600 font-medium whitespace-nowrap">
-                    {record.jurusan}
-                  </td>
+                    {/* WAKTU PULANG */}
+                    <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14px] font-mono tracking-tight whitespace-nowrap">
+                      {jamPulang ? (
+                        <span className="text-blue-600 font-bold">{jamPulang}</span>
+                      ) : (
+                        <span className="text-slate-300 font-normal">-</span>
+                      )}
+                    </td>
 
-                  {/* STATUS BADGE */}
-                  <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-right pr-4 sm:pr-6 whitespace-nowrap">
-                    {isLate ? (
-                      <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#fef3c7] text-[#d97706] tracking-tight">
-                        Terlambat
-                      </span>
-                    ) : isAbsent ? (
-                      <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#ffe4e6] text-[#e11d48] tracking-tight">
-                        Tidak Hadir
-                      </span>
-                    ) : (
-                      <span className="inline-block px-3.5 sm:px-5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#dcfce7] text-[#16a34a] tracking-tight">
-                        Hadir
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+                    {/* NAMA SISWA */}
+                    <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13.5px] sm:text-[15px] font-bold text-slate-900 whitespace-nowrap group-hover:text-blue-600 transition-colors">
+                      {namaSiswa}
+                    </td>
+
+                    {/* KELAS */}
+                    <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14.5px] text-slate-600 font-medium whitespace-nowrap">
+                      {kelasSiswa}
+                    </td>
+
+                    {/* JURUSAN */}
+                    <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14.5px] text-slate-600 font-medium whitespace-nowrap">
+                      {jurusanSiswa}
+                    </td>
+
+                    {/* STATUS BADGE */}
+                    <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-right pr-4 sm:pr-6 whitespace-nowrap">
+                      {isLate ? (
+                        <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#fef3c7] text-[#d97706] tracking-tight">
+                          Terlambat
+                        </span>
+                      ) : isAbsent ? (
+                        <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#ffe4e6] text-[#e11d48] tracking-tight">
+                          Tidak Hadir
+                        </span>
+                      ) : (
+                        <span className="inline-block px-3.5 sm:px-5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#dcfce7] text-[#16a34a] tracking-tight">
+                          Hadir
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

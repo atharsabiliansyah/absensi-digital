@@ -6,7 +6,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
+        username: '', 
         password: '',
         remember: false,
     });
@@ -66,19 +66,19 @@ export default function Login({ status, canResetPassword }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             </span>
-                            <TextInput
-                                id="email"
+                           <TextInput
+                                id="username" 
                                 type="text"
-                                name="email"
-                                value={data.email}
+                                name="username" 
+                                value={data.username} 
                                 className="w-full text-xs pl-9 rounded-xl border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600 h-11"
                                 placeholder="Masukkan NIP atau username"
                                 autoComplete="username"
                                 isFocused={true}
-                                onChange={(e) => setData('email', e.target.value)}
+                                onChange={(e) => setData('username', e.target.value)} 
                             />
                         </div>
-                        <InputError message={errors.email} className="mt-1 text-xs" />
+                        <InputError message={errors.username} className="mt-1 text-xs" /> 
                     </div>
 
                     <div>
