@@ -13,8 +13,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => {
-  const { photo: teacherPhoto } = useProfilePhoto();
-  const getFormattedTime = () => {
+    const { photo } = useProfilePhoto();
+    const getFormattedTime = () => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
             aria-label="Buka Profil Guru"
           >
             <img
-              src={teacherPhoto}
+              src={photo}
               alt="Foto Profil Bapak/Ibu Guru"
               width={34}
               height={34}
@@ -121,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
             className="relative w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-full shrink-0 ring-2 ring-blue-500/20 bg-white p-0.5 shadow-2xs overflow-hidden"
           >
             <img
-              src={teacherPhoto}
+              src={photo}
               alt="Foto Profil Bapak/Ibu Guru"
               width={38}
               height={38}

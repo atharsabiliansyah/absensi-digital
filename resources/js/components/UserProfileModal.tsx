@@ -70,6 +70,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 alt={teacherData.fullName}
                 width={84}
                 height={84}
+                
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 className="w-full h-full object-cover block"
               />
@@ -133,7 +134,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             >
               <div className="flex items-center gap-2">
                 <Settings className="w-4 h-4" />
-                <span>Pengaturan Akun &amp; Keamanan</span>
+                <span>Pengaturan Akun</span>
               </div>
               <ChevronRight className="w-4 h-4" />
             </button>

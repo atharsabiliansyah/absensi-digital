@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Filter,
   Calendar,
   ChevronDown,
   SlidersHorizontal,
   Check,
-  CheckCircle2,
-  Clock,
-  ClipboardCheck,
-  XCircle,
-  Activity,
   X,
-  ChevronRight,
 } from 'lucide-react';
 
 export interface PresensiItem {
@@ -24,30 +18,73 @@ export interface PresensiItem {
   status: 'Hadir' | 'Terlambat' | 'Izin' | 'Tidak Hadir' | 'Sakit';
 }
 
-const INITIAL_PRESENSI_DATA: PresensiItem[] = [
-  { no: 1, nis: '001234', nama: 'Isa', kelas: 'XI TKJ', jurusan: 'TKJ', waktu: '06:58:21 WIB', status: 'Hadir' },
-  { no: 2, nis: '001235', nama: 'Bador', kelas: 'X AKL', jurusan: 'AKL', waktu: '07:12:08 WIB', status: 'Terlambat' },
-  { no: 3, nis: '001236', nama: 'Citra', kelas: 'XI OTPK', jurusan: 'OTPK', waktu: '07:18:33 WIB', status: 'Hadir' },
-  { no: 4, nis: '001237', nama: 'Dimas', kelas: 'X BDP', jurusan: 'BDP', waktu: '07:21:17 WIB', status: 'Izin' },
-  { no: 5, nis: '001238', nama: 'Andi', kelas: 'XI TKJ', jurusan: 'TKJ', waktu: '07:05:17 WIB', status: 'Hadir' },
-  { no: 6, nis: '001240', nama: 'Raka', kelas: 'X OTPK', jurusan: 'OTPK', waktu: '07:15:00 WIB', status: 'Sakit' },
-  { no: 7, nis: '001239', nama: 'Siti', kelas: 'XI AKL', jurusan: 'AKL', waktu: '07:02:41 WIB', status: 'Hadir' },
-  { no: 8, nis: '001241', nama: 'Nisa', kelas: 'XI BDP', jurusan: 'BDP', waktu: '07:10:22 WIB', status: 'Terlambat' },
-];
-
 export const PresensiPageView: React.FC = () => {
-  const [data, setData] = useState<PresensiItem[]>(INITIAL_PRESENSI_DATA);
-  const [tanggal, setTanggal] = useState<string>('25/09/2026');
+  // Ambil tanggal hari ini dalam format YYYY-MM-DD
+  const getTodayString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // State Data Presensi (Diacak ke [] / Kosong di awal)
+  const [data, setData] = useState<PresensiItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [totalSiswa, setTotalSiswa] = useState<number>(0);
+
+  // State Filter
+  const [tanggal, setTanggal] = useState<string>(getTodayString());
   const [jurusan, setJurusan] = useState<string>('Semua Jurusan');
   const [kelas, setKelas] = useState<string>('Semua Kelas');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
-  // Notification Toast State (Matches Screen 2 in user's image)
+  // Notification Toast State
   const [notification, setNotification] = useState<{
     visible: boolean;
     studentName: string;
   } | null>(null);
+
+  // Fungsi Fetch Data dari Endpoint Backend Laravel
+  const fetchPresensi = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        tanggal,
+        jurusan,
+        kelas,
+      });
+
+      const response = await fetch(`/api/presensi-list?${params.toString()}`);
+      if (response.ok) {
+        const result = await response.json();
+        
+        // MAPPING DATA DARI DATABASE KE FORMAT PRESENSIITEM
+        const formattedData: PresensiItem[] = (result.data || []).map((item: any, index: number) => ({
+          no: index + 1,
+          nis: item.siswa?.nisn || '-',
+          nama: item.siswa?.nama_siswa || '-',
+          kelas: item.siswa?.kelas?.nama_kelas || '-',
+          jurusan: item.siswa?.kelas?.jurusan || '-',
+          waktu: `${item.waktu} WIB`,
+          status: item.status || 'Hadir',
+        }));
+
+        setData(formattedData);
+        setTotalSiswa(result.total || 0);
+      }
+    } catch (error) {
+      console.error('Gagal memuat data presensi:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Panggil data saat komponen pertama kali dimuat
+  useEffect(() => {
+    fetchPresensi();
+  }, []);
 
   const handleStatusChange = (no: number, newStatus: PresensiItem['status']) => {
     let studentName = '';
@@ -55,21 +92,12 @@ export const PresensiPageView: React.FC = () => {
       prev.map((item) => {
         if (item.no === no) {
           studentName = item.nama;
-          const waktu =
-            newStatus === 'Tidak Hadir'
-              ? 'Menunggu Konfirmasi'
-              : newStatus === 'Izin' || newStatus === 'Sakit'
-              ? '07:15:00 WIB'
-              : item.waktu === 'Menunggu Konfirmasi' || item.waktu === '-'
-              ? '07:08:15 WIB'
-              : item.waktu;
-          return { ...item, status: newStatus, waktu };
+          return { ...item, status: newStatus };
         }
         return item;
       })
     );
 
-    // Trigger Notification Toast
     setNotification({
       visible: true,
       studentName: studentName || 'Siswa',
@@ -80,9 +108,8 @@ export const PresensiPageView: React.FC = () => {
     }, 4000);
   };
 
-  // Avatar initial color theme mapping
   const getAvatarTheme = (name: string) => {
-    const initial = (name[0] || '').toUpperCase();
+    const initial = (name[0] || 'S').toUpperCase();
     switch (initial) {
       case 'I':
         return { bg: 'bg-[#e0e7ff]', text: 'text-[#4338ca]' };
@@ -105,7 +132,6 @@ export const PresensiPageView: React.FC = () => {
     }
   };
 
-  // Status badge styling matching user's Image 2 exactly (pill with label + downward triangle)
   const getStatusBadgeStyle = (status: PresensiItem['status']) => {
     switch (status) {
       case 'Tidak Hadir':
@@ -118,6 +144,8 @@ export const PresensiPageView: React.FC = () => {
         return 'bg-[#f0fdf4] text-[#16a34a] border-[#86efac] hover:bg-[#dcfce7]';
       case 'Terlambat':
         return 'bg-[#fffbeb] text-[#d97706] border-[#fcd34d] hover:bg-[#fef3c7]';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -134,7 +162,6 @@ export const PresensiPageView: React.FC = () => {
             setOpenDropdownId(isOpen ? null : item.no);
           }}
           className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full border text-[11.5px] font-semibold transition-all cursor-pointer select-none shadow-2xs ${badgeStyle}`}
-          title="Klik untuk memilih opsi status"
         >
           <span>{item.status}</span>
           <span className="text-[8px] leading-none opacity-85">▼</span>
@@ -150,7 +177,7 @@ export const PresensiPageView: React.FC = () => {
               }}
             />
             <div
-              className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 space-y-1"
+              className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 space-y-1"
               onClick={(e) => e.stopPropagation()}
             >
               {(['Hadir', 'Terlambat', 'Izin', 'Sakit', 'Tidak Hadir'] as const).map((option) => {
@@ -182,38 +209,25 @@ export const PresensiPageView: React.FC = () => {
     );
   };
 
-  const filteredData = data.filter((item) => {
-    const matchJurusan = jurusan === 'Semua Jurusan' || item.jurusan === jurusan;
-    const matchKelas = kelas === 'Semua Kelas' || item.kelas === kelas;
-    return matchJurusan && matchKelas;
-  });
-
   return (
     <div className="space-y-4 sm:space-y-6 relative pb-28 md:pb-10 max-w-full">
-      {/* 1. TOAST NOTIFICATION (Screen 2 matching screenshot exactly) */}
+      {/* Toast Notification */}
       {notification && notification.visible && (
-        <div className="fixed top-4 left-4 right-4 z-50 flex justify-center animate-in slide-in-from-top-3 fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-100/90 flex items-center gap-3.5 pl-4 pr-5 py-3 w-full max-w-md relative overflow-hidden">
-            {/* Left green accent bar */}
+        <div className="fixed top-4 left-4 right-4 z-50 flex justify-center">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3.5 pl-4 pr-5 py-3 w-full max-w-md relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#10b981]" />
-
-            {/* Green Circular Badge */}
             <div className="w-8 h-8 rounded-full bg-[#dcfce7] flex items-center justify-center shrink-0">
               <div className="w-5 h-5 rounded-full bg-[#10b981] flex items-center justify-center text-white">
                 <Check className="w-3 h-3 stroke-[3]" />
               </div>
             </div>
-
-            {/* Notification Text */}
             <div className="flex-1 text-[13px] font-medium text-slate-800 leading-snug">
               Status Presensi {notification.studentName} Berhasil Diubah
             </div>
-
             <button
               type="button"
               onClick={() => setNotification(null)}
-              className="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors cursor-pointer"
-              aria-label="Tutup notifikasi"
+              className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
@@ -221,52 +235,37 @@ export const PresensiPageView: React.FC = () => {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 2. MOBILE VIEW (Persis Seperti Screenshot Pengguna)       */}
-      {/* ========================================================= */}
+      {/* MOBILE VIEW */}
       <div className="block md:hidden space-y-4">
-        {/* Card: Parameter Presensi */}
         <div className="bg-white rounded-[22px] shadow-xs border border-slate-100 p-4 space-y-3.5">
-          {/* Card Header: Parameter Presensi & Real-time Sinkronisasi */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-[#1d4ed8]" />
-              <h2 className="text-[14px] font-bold text-slate-900 tracking-tight">
-                Parameter Presensi
-              </h2>
-            </div>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-[#1d4ed8]" />
+            <h2 className="text-[14px] font-bold text-slate-900">List Presensi</h2>
           </div>
 
-          {/* Input: Tanggal Presensi */}
           <div>
             <label className="block text-[11.5px] font-medium text-slate-600 mb-1.5">
               Tanggal Presensi
             </label>
-            <div className="relative">
-              <div className="w-full bg-[#f1f5f9] rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 text-slate-700">
-                <Calendar className="w-4 h-4 text-slate-600 shrink-0" />
-                <input
-                  type="text"
-                  value={tanggal}
-                  onChange={(e) => setTanggal(e.target.value)}
-                  className="bg-transparent border-none text-[13px] font-semibold text-slate-800 focus:outline-hidden w-full"
-                />
-              </div>
+            <div className="bg-[#f1f5f9] rounded-xl px-3.5 py-2.5 flex items-center gap-2.5">
+              <Calendar className="w-4 h-4 text-slate-600 shrink-0" />
+              <input
+                type="date"
+                value={tanggal}
+                onChange={(e) => setTanggal(e.target.value)}
+                className="bg-transparent border-none text-[13px] font-semibold text-slate-800 focus:outline-none w-full"
+              />
             </div>
           </div>
 
-          {/* Dropdown: Jurusan & Kelas */}
           <div className="grid grid-cols-2 gap-3">
-            {/* Jurusan */}
             <div>
-              <label className="block text-[11.5px] font-medium text-slate-600 mb-1.5">
-                Jurusan
-              </label>
+              <label className="block text-[11.5px] font-medium text-slate-600 mb-1.5">Jurusan</label>
               <div className="relative">
                 <select
                   value={jurusan}
                   onChange={(e) => setJurusan(e.target.value)}
-                  className="w-full appearance-none bg-[#f1f5f9] border-none rounded-xl px-3.5 py-2.5 pr-8 text-[12px] font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
+                  className="w-full appearance-none bg-[#f1f5f9] border-none rounded-xl px-3.5 py-2.5 pr-8 text-[12px] font-semibold text-slate-800"
                 >
                   <option value="Semua Jurusan">Semua Jurusan</option>
                   <option value="TKJ">TKJ</option>
@@ -278,110 +277,84 @@ export const PresensiPageView: React.FC = () => {
               </div>
             </div>
 
-            {/* Kelas */}
             <div>
-              <label className="block text-[11.5px] font-medium text-slate-600 mb-1.5">
-                Kelas
-              </label>
+              <label className="block text-[11.5px] font-medium text-slate-600 mb-1.5">Kelas</label>
               <div className="relative">
                 <select
                   value={kelas}
                   onChange={(e) => setKelas(e.target.value)}
-                  className="w-full appearance-none bg-[#f1f5f9] border-none rounded-xl px-3.5 py-2.5 pr-8 text-[12px] font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
+                  className="w-full appearance-none bg-[#f1f5f9] border-none rounded-xl px-3.5 py-2.5 pr-8 text-[12px] font-semibold text-slate-800"
                 >
                   <option value="Semua Kelas">Semua Kelas</option>
-                  <option value="XII TKJ 2">XII TKJ 2</option>
-                  <option value="XI TKJ">XI TKJ</option>
-                  <option value="X AKL">X AKL</option>
-                  <option value="XI OTPK">XI OTPK</option>
-                  <option value="X BDP">X BDP</option>
+                  <option value="X">X</option>
+                  <option value="XI">XI</option>
+                  <option value="XII">XII</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
           </div>
 
-          {/* Tombol Tampilkan */}
           <button
             type="button"
-            className="w-full mt-1 py-2.5 bg-[#0b2b68] hover:bg-[#081e4c] active:scale-[0.99] text-white text-[12.5px] font-semibold rounded-xl flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
+            onClick={fetchPresensi}
+            className="w-full mt-1 py-2.5 bg-[#0b2b68] hover:bg-[#081e4c] text-white text-[12.5px] font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Tampilkan</span>
           </button>
         </div>
 
-        {/* Student Attendance List Cards */}
+        {/* List Card Mobile */}
         <div className="space-y-2.5">
-          {filteredData.map((item) => {
-            const avatar = getAvatarTheme(item.nama);
-            return (
-              <div
-                key={item.no}
-                className="bg-white rounded-2xl p-3.5 shadow-xs border border-slate-100 flex items-center justify-between gap-3 hover:border-slate-200 transition-all"
-              >
-                {/* Left: Avatar Initial & Info */}
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Initial Avatar Circle */}
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-[15px] shrink-0 select-none ${avatar.bg} ${avatar.text}`}
-                  >
-                    {item.nama[0]}
+          {loading ? (
+            <div className="text-center py-8 text-xs text-slate-400">Memuat data presensi...</div>
+          ) : data.length === 0 ? (
+            <div className="bg-white rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-100">
+              Belum ada data presensi 
+            </div>
+          ) : (
+            data.map((item) => {
+              const avatar = getAvatarTheme(item.nama);
+              return (
+                <div
+                  key={item.no}
+                  className="bg-white rounded-2xl p-3.5 shadow-xs border border-slate-100 flex items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-[15px] shrink-0 select-none ${avatar.bg} ${avatar.text}`}>
+                      {item.nama[0]}
+                    </div>
+                    <div className="min-w-0 leading-tight">
+                      <h4 className="text-[13px] font-bold text-slate-900 truncate">
+                        {item.nama} <span className="font-normal text-slate-500 text-[11.5px]">• NIS {item.nis}</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-1 font-normal truncate">
+                        {item.kelas} • {item.waktu}
+                      </p>
+                    </div>
                   </div>
-
-                  {/* Student Name, NIS & Time */}
-                  <div className="min-w-0 leading-tight">
-                    <h4 className="text-[13px] font-bold text-slate-900 truncate">
-                      {item.nama}{' '}
-                      <span className="font-normal text-slate-500 text-[11.5px]">
-                        • NIS {item.nis}
-                      </span>
-                    </h4>
-                    <p className="text-[11px] text-slate-500 mt-1 font-normal truncate">
-                      {item.kelas} • {item.waktu}
-                    </p>
-                  </div>
+                  <div className="shrink-0">{renderStatusBadge(item)}</div>
                 </div>
-
-                {/* Right: Status Pill Badge (Clickable to change status) */}
-                <div className="shrink-0">
-                  {renderStatusBadge(item)}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* ========================================================= */}
-      {/* 3. DESKTOP VIEW (Table view preserved for large screens)  */}
-      {/* ========================================================= */}
+      {/* DESKTOP VIEW */}
       <div className="hidden md:block space-y-6">
-        {/* Header & Breadcrumb */}
-        <div className="text-left">
-          <h1 className="text-[27px] font-bold text-[#1e293b] tracking-tight leading-tight">
-            Presensi Hari Ini
-          </h1>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1 font-medium">
-            <span>Presensi</span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-semibold text-slate-600">Data Presensi</span>
-          </div>
-        </div>
-
-        {/* Filter Card */}
         <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-5">
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-2">
               <label className="text-[13px] text-slate-600 font-medium">Tanggal</label>
               <div className="relative">
                 <input
-                  type="text"
+                  type="date"
                   value={tanggal}
                   onChange={(e) => setTanggal(e.target.value)}
-                  className="w-36 px-3 py-2 pr-9 bg-white border border-slate-200 rounded-xl text-xs font-mono font-medium text-slate-700 focus:outline-hidden"
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
                 />
-                <Calendar className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
@@ -412,11 +385,9 @@ export const PresensiPageView: React.FC = () => {
                   className="appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2 pr-8 text-xs font-medium text-slate-700 cursor-pointer"
                 >
                   <option value="Semua Kelas">Semua Kelas</option>
-                  <option value="XII TKJ 2">XII TKJ 2</option>
-                  <option value="XI TKJ">XI TKJ</option>
-                  <option value="X AKL">X AKL</option>
-                  <option value="XI OTPK">XI OTPK</option>
-                  <option value="X BDP">X BDP</option>
+                  <option value="X">X</option>
+                  <option value="XI">XI</option>
+                  <option value="XII">XII</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -424,6 +395,7 @@ export const PresensiPageView: React.FC = () => {
 
             <button
               type="button"
+              onClick={fetchPresensi}
               className="px-6 py-2 bg-[#1d6ee5] hover:bg-[#1a5fca] text-white text-xs font-semibold rounded-xl shadow-xs cursor-pointer"
             >
               Tampilkan
@@ -431,7 +403,6 @@ export const PresensiPageView: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Table */}
         <div className="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -446,27 +417,38 @@ export const PresensiPageView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100/90 text-[13px]">
-              {filteredData.map((row) => (
-                <tr key={row.no} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-4 px-5 text-slate-500 font-mono text-xs">{row.no}</td>
-                  <td className="py-4 px-5 text-slate-500 font-mono text-xs">{row.nis}</td>
-                  <td className="py-4 px-5 font-bold text-slate-900">{row.nama}</td>
-                  <td className="py-4 px-5 text-slate-700 font-medium">{row.kelas}</td>
-                  <td className="py-4 px-5 text-slate-700 font-medium">{row.jurusan}</td>
-                  <td className="py-4 px-5 text-slate-500 font-mono text-xs">{row.waktu}</td>
-                  <td className="py-4 pr-8 text-right">
-                    {renderStatusBadge(row)}
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                    Memuat data presensi...
                   </td>
                 </tr>
-              ))}
+              ) : data.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                    Belum ada data presensi 
+                  </td>
+                </tr>
+              ) : (
+                data.map((row) => (
+                  <tr key={row.no} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-4 px-5 text-slate-500 font-mono text-xs">{row.no}</td>
+                    <td className="py-4 px-5 text-slate-500 font-mono text-xs">{row.nis}</td>
+                    <td className="py-4 px-5 font-bold text-slate-900">{row.nama}</td>
+                    <td className="py-4 px-5 text-slate-700 font-medium">{row.kelas}</td>
+                    <td className="py-4 px-5 text-slate-700 font-medium">{row.jurusan}</td>
+                    <td className="py-4 px-5 text-slate-500 font-mono text-xs">{row.waktu}</td>
+                    <td className="py-4 pr-8 text-right">{renderStatusBadge(row)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
 
-          {/* Desktop Pagination */}
           <div className="py-3.5 px-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <div>
-              Menampilkan <span className="font-semibold text-slate-700">1 - {filteredData.length}</span> dari{' '}
-              <span className="font-semibold text-slate-700">148</span> siswa
+              Menampilkan <span className="font-semibold text-slate-700">{data.length}</span> dari{' '}
+              <span className="font-semibold text-slate-700">{totalSiswa}</span> siswa
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -479,20 +461,9 @@ export const PresensiPageView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setCurrentPage(1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg font-semibold ${
-                  currentPage === 1 ? 'bg-[#1d6ee5] text-white' : 'border border-slate-200 text-slate-600'
-                }`}
+                className="w-8 h-8 flex items-center justify-center rounded-lg font-semibold bg-[#1d6ee5] text-white"
               >
                 1
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(2)}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg font-medium ${
-                  currentPage === 2 ? 'bg-[#1d6ee5] text-white' : 'border border-slate-200 text-slate-600'
-                }`}
-              >
-                2
               </button>
               <button
                 type="button"

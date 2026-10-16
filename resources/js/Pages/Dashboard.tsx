@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import {
   User,
@@ -20,34 +21,59 @@ import { LaporanPageView } from '../components/LaporanPageView';
 import { PengaturanPageView } from '../components/PengaturanPageView';
 import { MobileDashboardView } from '../components/MobileDashboardView';
 import { CurvedMobileBottomNav } from '../components/CurvedMobileBottomNav';
-import {
-  INITIAL_RECENT_ATTENDANCE,
-  INITIAL_STATS,
-  AttendanceRecord,
-} from '../data/mockData';
+
+// Helper untuk memastikan properti nama siswa terbaca di semua format komponen tabel
+const formatRecord = (item: any) => {
+  const studentName = item.siswa?.nama_siswa || item.namaSiswa || item.nama || item.nama_siswa || '-';
+  return {
+    id: item.id,
+    waktu: item.waktu,
+    waktu_pulang: item.waktu_pulang,
+    nama: studentName,
+    namaSiswa: studentName,
+    nama_siswa: studentName,
+    kelas: item.siswa?.kelas?.nama_kelas || item.kelas || '-',
+    jurusan: item.siswa?.kelas?.jurusan || item.jurusan || '-',
+    status: item.status,
+  };
+};
 
 export default function App() {
+  // 1. Ambil data dari Backend Laravel
+  const { auth, presensi = [], stats: backendStats } = usePage<any>().props;
+
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const [records] = useState<AttendanceRecord[]>(INITIAL_RECENT_ATTENDANCE);
-  const [stats] = useState(INITIAL_STATS);
 
-  // Time & Date format for real-time sync
+  // Hitung persentase untuk StatCard
+  const totalAwal = backendStats?.total_siswa || 1;
+  const hadirPercentNum = Math.round(((backendStats?.hadir || 0) / totalAwal) * 100);
+  const terlambatPercentNum = Math.round(((backendStats?.terlambat || 0) / totalAwal) * 100);
+  const tidakHadirPercentNum = Math.round(((backendStats?.tidak_hadir || 0) / totalAwal) * 100);
+
+  // 2. State dinamis terformat
+  const [records, setRecords] = useState<any[]>(() => presensi.map(formatRecord));
+  const [stats, setStats] = useState({
+    hadir: backendStats?.hadir || 0,
+    terlambat: backendStats?.terlambat || 0,
+    tidakHadir: backendStats?.tidak_hadir || 0,
+    totalSiswa: backendStats?.total_siswa || 0,
+    hadirPercent: hadirPercentNum,
+    terlambatPercent: terlambatPercentNum,
+    tidakHadirPercent: tidakHadirPercentNum,
+    totalPercent: 100,
+  });
+
+  // Time & Date format
   const getFormattedTime = () => {
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
   };
 
   const getFormattedDate = () => {
     const now = new Date();
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-    ];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
   };
 
@@ -63,18 +89,64 @@ export default function App() {
   }, []);
 
   // Modals & Popups
-  const [selectedStudentDetail, setSelectedStudentDetail] = useState<AttendanceRecord | null>(null);
+  const [selectedStudentDetail, setSelectedStudentDetail] = useState<any | null>(null);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [attendanceNotif, setAttendanceNotif] = useState<{ nama: string; waktu: string } | null>(null);
 
-  // Auto-hide attendance notification after 6 seconds
+  // 3. Polling Real-time: Cek data baru ke Laravel setiap 2.5 detik
+  useEffect(() => {
+    const fetchLatestData = async () => {
+      try {
+        const response = await fetch('/api/dashboard-data');
+        if (response.ok) {
+          const data = await response.json();
+
+          // Pemicu Notifikasi jika ada data tap baru
+          if (data.presensi && data.presensi.length > records.length) {
+            const newest = data.presensi[0];
+            if (newest) {
+              const nameToShow = newest.siswa?.nama_siswa || newest.namaSiswa || newest.nama || 'Siswa';
+              setAttendanceNotif({
+                nama: nameToShow,
+                waktu: newest.waktu,
+              });
+            }
+          }
+
+          // Format ulang record agar sesuai tabel
+          const formattedRecords = data.presensi.map(formatRecord);
+          setRecords(formattedRecords);
+
+          // Update Angka Statistik
+          const total = data.stats.total_siswa || 1;
+          setStats({
+            hadir: data.stats.hadir,
+            terlambat: data.stats.terlambat,
+            tidakHadir: data.stats.tidak_hadir,
+            totalSiswa: data.stats.total_siswa,
+            hadirPercent: Math.round((data.stats.hadir / total) * 100),
+            terlambatPercent: Math.round((data.stats.terlambat / total) * 100),
+            tidakHadirPercent: Math.round((data.stats.tidak_hadir / total) * 100),
+            totalPercent: 100,
+          });
+        }
+      } catch (error) {
+        console.error("Gagal sinkronisasi data presensi:", error);
+      }
+    };
+
+    const interval = setInterval(fetchLatestData, 2500);
+    return () => clearInterval(interval);
+  }, [records.length]);
+
+  // Auto-hide notification
   useEffect(() => {
     if (attendanceNotif) {
       const timer = setTimeout(() => {
         setAttendanceNotif(null);
       }, 6000);
-      return () => clearTimeout(timer);
+      return () => clearInterval(timer);
     }
   }, [attendanceNotif]);
 
@@ -87,7 +159,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans antialiased">
-      {/* 1. Left Sidebar Navigation (Desktop only) */}
+      {/* 1. Left Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={(tab) => {
@@ -101,7 +173,6 @@ export default function App() {
 
       {/* 2. Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:pl-72 pl-0 transition-all duration-300">
-        {/* Top Header Bar (Desktop always; Mobile only on non-dashboard tabs) */}
         <div className={activeTab === 'dashboard' ? 'hidden md:block' : 'block'}>
           <Header
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -122,7 +193,7 @@ export default function App() {
 
           {activeTab === 'dashboard' && (
             <>
-              {/* MOBILE DASHBOARD (Screens < 768px matching mobile screenshot) */}
+              {/* MOBILE DASHBOARD */}
               <div className="block md:hidden">
                 <MobileDashboardView
                   onSelectRecord={(rec) => setSelectedStudentDetail(rec)}
@@ -136,21 +207,14 @@ export default function App() {
                 />
               </div>
 
-              {/* DESKTOP DASHBOARD (Screens >= 768px matching desktop screenshot) */}
+              {/* DESKTOP DASHBOARD */}
               <div className="hidden md:block space-y-7">
-                {/* Welcome Greeting */}
                 <div className="mb-7 text-left">
-                  <h1 className="text-[34px] lg:text-[36px] font-bold text-[#1e293b] tracking-tight leading-tight">
-                    Selamat Datang, Admin Sekolah
-                  </h1>
-                  <p className="text-[15.5px] text-slate-400 mt-1.5 font-normal">
-                    Pantau presensi siswa secara real-time
-                  </p>
+                  <h1 className="text-2xl font-bold">Selamat Datang, {auth?.user?.name ?? 'Untung Sudarto'}</h1>
                 </div>
 
-                {/* Main 2-Column Dashboard Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
-                  {/* Left Column: Recent Attendance Table (~67% width) */}
+                  {/* Tabel Presensi Terbaru */}
                   <div className="lg:col-span-8 flex flex-col">
                     <RecentAttendanceTable
                       records={records}
@@ -159,9 +223,8 @@ export default function App() {
                     />
                   </div>
 
-                  {/* Right Column: 4 Vertical Stacked Summary Cards (~33% width) */}
+                  {/* Ringkasan Kartu Statistik */}
                   <div className="lg:col-span-4 flex flex-col gap-5">
-                    {/* 1. Hadir Card */}
                     <StatCard
                       label="Hadir"
                       count={stats.hadir}
@@ -173,7 +236,6 @@ export default function App() {
                       onClick={() => setActiveTab('presensi')}
                     />
 
-                    {/* 2. Terlambat Card */}
                     <StatCard
                       label="Terlambat"
                       count={stats.terlambat}
@@ -185,7 +247,6 @@ export default function App() {
                       onClick={() => setActiveTab('presensi')}
                     />
 
-                    {/* 3. Tidak Hadir Card */}
                     <StatCard
                       label="Tidak Hadir"
                       count={stats.tidakHadir}
@@ -197,7 +258,6 @@ export default function App() {
                       onClick={() => setActiveTab('presensi')}
                     />
 
-                    {/* 4. Total Siswa Card */}
                     <StatCard
                       label="Total Siswa"
                       count={stats.totalSiswa}
@@ -214,14 +274,12 @@ export default function App() {
           )}
         </main>
 
-        {/* Global Footer (Desktop only) */}
         <footer className="hidden md:block mt-auto py-6 px-8 border-t border-slate-200/60 text-center">
           <p className="text-[12.5px] text-slate-400 font-normal">
             © 2026 SMK PGRI 11 CILEDUG • Sistem Presensi Digital Berbasis RFID dan IoT
           </p>
         </footer>
 
-        {/* Mobile Bottom Navigation Bar (Screens < 768px matching curved UI/UX design) */}
         <CurvedMobileBottomNav
           activeTab={activeTab}
           onSelectTab={(tab) => {
@@ -231,13 +289,12 @@ export default function App() {
         />
       </div>
 
-      {/* Student Detail Modal */}
       <StudentDetailModal
         record={selectedStudentDetail}
         onClose={() => setSelectedStudentDetail(null)}
       />
 
-      {/* Logout Confirmation Modal */}
+      {/* Modal Logout */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-sm w-full p-7 shadow-2xl border border-slate-100 text-center">
@@ -269,7 +326,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Real-time Presensi Toast Notification (Matches user image exactly) */}
+      {/* Real-time Presensi Toast Notification */}
       {attendanceNotif && (
         <div className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-50 max-w-sm w-full bg-white rounded-2xl shadow-2xl border-l-4 border-l-emerald-500 border border-slate-100 p-3.5 sm:p-4 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300">
           <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">

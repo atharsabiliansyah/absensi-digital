@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { House, ClipboardCheck, Users, FileChartColumn, Settings } from 'lucide-react';
+import { LayoutGrid, CalendarCheck, Settings } from 'lucide-react';
 import { NavTab } from './Sidebar';
 
 interface CurvedMobileBottomNavProps {
@@ -14,10 +14,8 @@ interface NavItemConfig {
 }
 
 const NAV_ITEMS: NavItemConfig[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: House },
-  { id: 'presensi', label: 'Presensi', icon: ClipboardCheck },
-  { id: 'data-siswa', label: 'Data Siswa', icon: Users },
-  { id: 'laporan', label: 'Laporan', icon: FileChartColumn },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
+  { id: 'presensi', label: 'Presensi', icon: CalendarCheck },
   { id: 'pengaturan', label: 'Pengaturan', icon: Settings },
 ];
 
@@ -41,13 +39,12 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const activeIndex = Math.max(
-    0,
-    NAV_ITEMS.findIndex((item) => item.id === activeTab)
-  );
+  const currentIndex = NAV_ITEMS.findIndex((item) => item.id === activeTab);
+  const isTabInNav = currentIndex !== -1;
+  const activeIndex = isTabInNav ? currentIndex : 0;
 
   const numItems = NAV_ITEMS.length;
-  const itemWidth = navWidth > 0 ? navWidth / numItems : 72;
+  const itemWidth = navWidth > 0 ? navWidth / numItems : 120;
   const cx = activeIndex * itemWidth + itemWidth / 2;
 
   // Geometry parameters for liquid wave
@@ -57,12 +54,13 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
   const yPeak = 2;
   const rCorner = 24;
 
-  const waveRadius = 38;
+  const waveRadius = 40;
   const waveLeft = Math.max(rCorner, cx - waveRadius);
   const waveRight = Math.min(W - rCorner, cx + waveRadius);
 
   // Continuous seamless liquid shape path
-  const liquidPath = `
+  const liquidPath = isTabInNav
+    ? `
     M ${rCorner} ${yBase}
     L ${waveLeft} ${yBase}
     C ${waveLeft + 14} ${yBase}, ${cx - 18} ${yPeak}, ${cx - 10} ${yPeak}
@@ -77,15 +75,27 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
     L 0 ${yBase + rCorner}
     A ${rCorner} ${rCorner} 0 0 1 ${rCorner} ${yBase}
     Z
+  `
+    : `
+    M ${rCorner} ${yBase}
+    L ${W - rCorner} ${yBase}
+    A ${rCorner} ${rCorner} 0 0 1 ${W} ${yBase + rCorner}
+    L ${W} ${H - rCorner}
+    A ${rCorner} ${rCorner} 0 0 1 ${W - rCorner} ${H}
+    L ${rCorner} ${H}
+    A ${rCorner} ${rCorner} 0 0 1 0 ${H - rCorner}
+    L 0 ${yBase + rCorner}
+    A ${rCorner} ${rCorner} 0 0 1 ${rCorner} ${yBase}
+    Z
   `;
 
-  const ActiveIcon = NAV_ITEMS[activeIndex]?.icon || House;
+  const ActiveIcon = NAV_ITEMS[activeIndex]?.icon || LayoutGrid;
 
   return (
-    <div className="md:hidden fixed bottom-2 left-0 right-0 z-30 select-none px-3 pointer-events-none">
+    <div className="md:hidden fixed bottom-2 left-0 right-0 z-30 select-none px-4 pointer-events-none">
       <div
         ref={containerRef}
-        className="relative w-full max-w-md mx-auto pointer-events-auto h-[82px]"
+        className="relative w-full max-w-sm mx-auto pointer-events-auto h-[82px]"
       >
         {/* Unified Liquid Background with Smooth Wave & Drop Shadow */}
         <div className="absolute inset-0 filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.12)]">
@@ -103,22 +113,24 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
           </svg>
         </div>
 
-        {/* Sliding Elevated Liquid Bubble Button (No blue border circle) */}
-        <div
-          className="absolute -top-2.5 z-20 transition-all duration-300 ease-out pointer-events-none"
-          style={{
-            left: `${cx}px`,
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <div className="w-[52px] h-[52px] rounded-full bg-white shadow-lg shadow-slate-300/60 flex items-center justify-center ring-[3px] ring-white transition-transform duration-200">
-            <ActiveIcon className="w-6 h-6 text-[#2563eb] stroke-[2.2]" />
+        {/* Sliding Elevated Liquid Bubble Button */}
+        {isTabInNav && (
+          <div
+            className="absolute -top-2.5 z-20 transition-all duration-300 ease-out pointer-events-none"
+            style={{
+              left: `${cx}px`,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <div className="w-[52px] h-[52px] rounded-full bg-white shadow-lg shadow-blue-500/20 flex items-center justify-center ring-[3px] ring-white transition-transform duration-200">
+              <ActiveIcon className="w-6 h-6 text-[#1d4ed8] stroke-[2.2]" />
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* 5 Tab Navigation Buttons */}
-        <div className="relative z-10 grid grid-cols-5 h-[76px] pt-5">
-          {NAV_ITEMS.map((item, idx) => {
+        {/* 3 Tab Navigation Buttons */}
+        <div className="relative z-10 grid grid-cols-3 h-[76px] pt-5">
+          {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 
@@ -131,7 +143,7 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
                 {/* Inactive Icon */}
                 {!isActive ? (
                   <div className="text-slate-400 group-hover:text-slate-600 transition-colors mb-1">
-                    <Icon className="w-5 h-5 stroke-[1.8]" />
+                    <Icon className="w-5 h-5 stroke-[1.9]" />
                   </div>
                 ) : (
                   /* Placeholder space for the active bubble */
@@ -140,7 +152,7 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
 
                 {/* Tab Label */}
                 <span
-                  className={`text-[10px] tracking-tight leading-none transition-colors ${
+                  className={`text-[11px] tracking-tight leading-none transition-colors ${
                     isActive
                       ? 'font-bold text-slate-900 mt-0.5'
                       : 'font-medium text-slate-400 group-hover:text-slate-600 mt-0.5'
@@ -155,7 +167,7 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
 
         {/* Bottom iOS Home Indicator Line */}
         <div className="absolute bottom-1.5 inset-x-0 flex justify-center pointer-events-none">
-          <div className="w-28 h-1 bg-slate-300/80 rounded-full" />
+          <div className="w-24 h-1 bg-slate-300/80 rounded-full" />
         </div>
       </div>
     </div>
