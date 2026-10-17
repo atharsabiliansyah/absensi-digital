@@ -1,707 +1,311 @@
-import React, { useState } from 'react';
-import {
-  Check,
-  Clock,
-  FileText,
-  User,
-  X,
-  ChevronDown,
-  FileSpreadsheet,
-  Download,
-  ArrowLeft,
-  CheckCircle2,
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
 
-interface LaporanRecord {
-  no: number;
-  tanggal: string;
-  nis: string;
-  nama: string;
-  kelas: string;
-  jurusan: string;
-  status: 'Hadir' | 'Terlambat' | 'Izin' | 'Sakit' | 'Tidak Hadir';
-  waktu: string;
+interface Siswa {
+    id: number;
+    nisn: string;
+    nama_siswa: string;
+    kelas?: {
+        id: number;
+        nama_kelas: string;
+        jurusan?: string;
+    };
 }
 
-export const LaporanPageView: React.FC = () => {
-  // Mode: default is 'tabel' (user sees data table first!), then clicks 'Export ke Excel' to open 'export' view!
-  const [activeMode, setActiveMode] = useState<'tabel' | 'export'>('tabel');
+interface PresensiItem {
+    id: number;
+    tanggal: string;
+    waktu: string | null;
+    waktu_pulang: string | null;
+    status: string;
+    siswa?: Siswa;
+}
 
-  // Form states for Filter & Export
-  const [jenisLaporan, setJenisLaporan] = useState<string>('Presensi Siswa');
-  const [selectedMonth, setSelectedMonth] = useState<string>('September');
-  const [selectedYear, setSelectedYear] = useState<string>('2026');
-  const [selectedJurusan, setSelectedJurusan] = useState<string>('Semua Jurusan');
-  const [selectedKelas, setSelectedKelas] = useState<string>('Semua Kelas');
-  const [selectedStatus, setSelectedStatus] = useState<string>('Semua Status');
-  const [toastNotification, setToastNotification] = useState<{
-    title: string;
-    description: string;
-  } | null>(null);
+interface KelasItem {
+    id: number;
+    nama_kelas: string;
+    jurusan?: string;
+}
 
-  // Table records matching screenshot exactly
-  const initialRecords: LaporanRecord[] = [
-    {
-      no: 1,
-      tanggal: '01/09/2026',
-      nis: '001234',
-      nama: 'Isa',
-      kelas: 'XI TKJ',
-      jurusan: 'TKJ',
-      status: 'Hadir',
-      waktu: '06:58',
-    },
-    {
-      no: 2,
-      tanggal: '01/09/2026',
-      nis: '001235',
-      nama: 'Bador',
-      kelas: 'X AKL',
-      jurusan: 'AKL',
-      status: 'Terlambat',
-      waktu: '07:12',
-    },
-    {
-      no: 3,
-      tanggal: '01/09/2026',
-      nis: '001236',
-      nama: 'Citra',
-      kelas: 'XI OTPK',
-      jurusan: 'OTPK',
-      status: 'Hadir',
-      waktu: '06:57',
-    },
-    {
-      no: 4,
-      tanggal: '01/09/2026',
-      nis: '001237',
-      nama: 'Dimas',
-      kelas: 'X BDP',
-      jurusan: 'BDP',
-      status: 'Tidak Hadir',
-      waktu: '-',
-    },
-    {
-      no: 5,
-      tanggal: '01/09/2026',
-      nis: '001238',
-      nama: 'Eka Putri',
-      kelas: 'XI TKJ',
-      jurusan: 'TKJ',
-      status: 'Izin',
-      waktu: '-',
-    },
-    {
-      no: 6,
-      tanggal: '01/09/2026',
-      nis: '001239',
-      nama: 'Fani Rahma',
-      kelas: 'X AKL',
-      jurusan: 'AKL',
-      status: 'Sakit',
-      waktu: '-',
-    },
-  ];
+interface Summary {
+    hadir: number;
+    terlambat: number;
+    izin: number;
+    sakit: number;
+    tidak_hadir: number;
+}
 
-  const [records, setRecords] = useState<LaporanRecord[]>(initialRecords);
+interface Filters {
+    bulan?: string;
+    tahun?: string;
+    jurusan?: string;
+    kelas_id?: string;
+    status?: string;
+}
 
-  const months = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-  ];
+interface Props {
+    presensis?: PresensiItem[];
+    summary?: Summary;
+    kelases?: KelasItem[];
+    jurusans?: string[];
+    filters?: Filters;
+}
 
-  const showToast = (title: string, description: string) => {
-    setToastNotification({ title, description });
-    setTimeout(() => {
-      setToastNotification((prev) => (prev?.title === title ? null : prev));
-    }, 4000);
-  };
+export const LaporanPageView: React.FC<Props> = ({
+    presensis = [],
+    summary = { hadir: 0, terlambat: 0, izin: 0, sakit: 0, tidak_hadir: 0 },
+    kelases = [],
+    jurusans = [],
+    filters = {}
+}) => {
+    const [bulan, setBulan] = useState(filters.bulan || '10');
+    const [tahun, setTahun] = useState(filters.tahun || '2026');
+    const [jurusan, setJurusan] = useState(filters.jurusan || 'Semua');
+    const [kelasId, setKelasId] = useState(filters.kelas_id || 'Semua');
+    const [status, setStatus] = useState(filters.status || 'Semua');
 
-  // Real Excel / CSV file download
-  const handleDownloadFile = () => {
-    const headers = ['NO', 'TANGGAL', 'NIS', 'NAMA SISWA', 'KELAS', 'JURUSAN', 'STATUS', 'WAKTU'];
-    const rows = records.map((r, i) => [
-      i + 1,
-      r.tanggal,
-      r.nis,
-      `"${r.nama}"`,
-      `"${r.kelas}"`,
-      r.jurusan,
-      r.status,
-      r.waktu,
-    ]);
+    // Sinkronkan state dropdown dengan data filter dari server
+    useEffect(() => {
+        if (filters.bulan) setBulan(filters.bulan);
+        if (filters.tahun) setTahun(filters.tahun);
+        if (filters.jurusan) setJurusan(filters.jurusan);
+        if (filters.kelas_id) setKelasId(filters.kelas_id);
+        if (filters.status) setStatus(filters.status);
+    }, [filters]);
 
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const handleFilter = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.get('/laporan', {
+            bulan,
+            tahun,
+            jurusan,
+            kelas_id: kelasId,
+            status,
+        }, {
+            preserveState: true,
+            replace: true,
+        });
+    };
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    const sanitizedJenis = jenisLaporan.replace(/\s+/g, '_');
-    link.setAttribute(
-      'download',
-      `Laporan_${sanitizedJenis}_${selectedMonth}_${selectedYear}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Fungsi Download Langsung / Export ke Excel
+    const handleExportExcel = () => {
+        const params = new URLSearchParams({
+            bulan,
+            tahun,
+            jurusan,
+            kelas_id: kelasId,
+            status,
+        }).toString();
 
-    showToast(
-      'Export Excel Berhasil',
-      `Berkas Laporan_${sanitizedJenis}_${selectedMonth}_${selectedYear}.xlsx berhasil diunduh.`
-    );
-  };
+        window.location.href = `/laporan/export?${params}`;
+    };
 
-  const handleFilter = () => {
-    let filtered = [...initialRecords];
-    if (selectedJurusan !== 'Semua Jurusan') {
-      filtered = filtered.filter((r) => r.jurusan === selectedJurusan);
-    }
-    if (selectedKelas !== 'Semua Kelas') {
-      filtered = filtered.filter((r) => r.kelas === selectedKelas);
-    }
-    if (selectedStatus !== 'Semua Status') {
-      filtered = filtered.filter((r) => r.status === selectedStatus);
-    }
-    setRecords(filtered);
-    showToast(
-      'Filter Laporan Berhasil Diterapkan',
-      `Menampilkan presensi ${selectedMonth} ${selectedYear} (${selectedJurusan} • ${selectedKelas})`
-    );
-  };
+    return (
+        <div className="space-y-6">
+            {/* Box Header Filter */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-3">
+                    {/* Periode */}
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700">Periode</label>
+                        <div className="flex gap-2">
+                            <select
+                                value={bulan}
+                                onChange={(e) => setBulan(e.target.value)}
+                                className="w-36 px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                            >
+                                <option value="01">Januari</option>
+                                <option value="02">Februari</option>
+                                <option value="03">Maret</option>
+                                <option value="04">April</option>
+                                <option value="05">Mei</option>
+                                <option value="06">Juni</option>
+                                <option value="07">Juli</option>
+                                <option value="08">Agustus</option>
+                                <option value="09">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
 
-  const getStatusBadge = (status: LaporanRecord['status']) => {
-    switch (status) {
-      case 'Hadir':
-        return 'bg-emerald-50 text-emerald-600 border border-emerald-200';
-      case 'Terlambat':
-        return 'bg-amber-50 text-amber-600 border border-amber-200';
-      case 'Tidak Hadir':
-        return 'bg-rose-50 text-rose-600 border border-rose-200';
-      case 'Izin':
-        return 'bg-sky-50 text-sky-600 border border-sky-200';
-      case 'Sakit':
-        return 'bg-purple-50 text-purple-600 border border-purple-200';
-      default:
-        return 'bg-slate-50 text-slate-600 border border-slate-200';
-    }
-  };
+                            <select
+                                value={tahun}
+                                onChange={(e) => setTahun(e.target.value)}
+                                className="w-28 px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                            >
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                            </select>
+                        </div>
+                    </div>
 
-  const currentFileName = `Laporan_${jenisLaporan.replace(/\s+/g, '_')}_${selectedMonth}_${selectedYear}.xlsx`;
-
-  return (
-    <div className="space-y-6 relative pb-8">
-      {/* Floating Toast Notification (Never covers the top header / Untung Sudarto) */}
-      {toastNotification && (
-        <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 max-w-sm w-full bg-white rounded-2xl shadow-2xl border-l-4 border-l-emerald-500 border border-slate-100 p-3.5 sm:p-4 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300">
-          <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <Check className="w-5 h-5 stroke-[2.8]" />
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <h5 className="text-[13px] sm:text-[13.5px] font-bold text-slate-900 leading-tight">
-              {toastNotification.title}
-            </h5>
-            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
-              {toastNotification.description}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToastNotification(null)}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors cursor-pointer"
-            aria-label="Tutup Notifikasi"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* VIEW 1: TABEL DATA LAPORAN (DEFAULT VIEW) */}
-      {/* ======================================================== */}
-      {activeMode === 'tabel' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          
-
-          {/* 2. Top Filter Card (Periode, Jurusan, Kelas, Status + Tampilkan) */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
-              {/* Periode: Bulan & Tahun */}
-              <div className="lg:col-span-4">
-                <label className="text-xs font-semibold text-slate-700 block mb-2">
-                  Periode
-                </label>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="relative">
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                    >
-                      {months.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                  <div className="relative">
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(e.target.value)}
-                      className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                    >
-                      <option value="2026">2026</option>
-                      <option value="2025">2025</option>
-                      <option value="2024">2024</option>
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Jurusan */}
-              <div className="lg:col-span-2">
-                <label className="text-xs font-semibold text-slate-700 block mb-2">
-                  Jurusan
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedJurusan}
-                    onChange={(e) => setSelectedJurusan(e.target.value)}
-                    className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                  >
-                    <option value="Semua Jurusan">Semua Jurusan</option>
-                    <option value="TKJ">TKJ</option>
-                    <option value="AKL">AKL</option>
-                    <option value="OTPK">OTPK</option>
-                    <option value="BDP">BDP</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Kelas */}
-              <div className="lg:col-span-2">
-                <label className="text-xs font-semibold text-slate-700 block mb-2">
-                  Kelas
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedKelas}
-                    onChange={(e) => setSelectedKelas(e.target.value)}
-                    className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                  >
-                    <option value="Semua Kelas">Semua Kelas</option>
-                    <option value="X AKL">X AKL</option>
-                    <option value="X BDP">X BDP</option>
-                    <option value="XI TKJ">XI TKJ</option>
-                    <option value="XI OTPK">XI OTPK</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="lg:col-span-2">
-                <label className="text-xs font-semibold text-slate-700 block mb-2">
-                  Status
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 pr-8 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                  >
-                    <option value="Semua Status">Semua Status</option>
-                    <option value="Hadir">Hadir</option>
-                    <option value="Terlambat">Terlambat</option>
-                    <option value="Izin">Izin</option>
-                    <option value="Sakit">Sakit</option>
-                    <option value="Tidak Hadir">Tidak Hadir</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Action Button: Tampilkan */}
-              <div className="lg:col-span-2">
-                <button
-                  type="button"
-                  onClick={handleFilter}
-                  className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2.5 px-5 rounded-xl text-xs sm:text-[13.5px] font-semibold transition-all shadow-xs hover:shadow-md cursor-pointer flex items-center justify-center"
-                >
-                  Tampilkan
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. 5 Stat Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
-            {/* Hadir */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                <Check className="w-6 h-6 text-emerald-600 stroke-[2.8]" />
-              </div>
-              <div className="text-left">
-                <div className="text-xs text-slate-400 font-medium">Hadir</div>
-                <div className="text-xl sm:text-2xl font-bold text-slate-900 font-sans tracking-tight">
-                  1.250
-                </div>
-              </div>
-            </div>
-
-            {/* Terlambat */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                <Clock className="w-6 h-6 text-amber-600 stroke-[2.4]" />
-              </div>
-              <div className="text-left">
-                <div className="text-xs text-slate-400 font-medium">Terlambat</div>
-                <div className="text-xl sm:text-2xl font-bold text-slate-900 font-sans tracking-tight">
-                  120
-                </div>
-              </div>
-            </div>
-
-            {/* Izin */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5 text-sky-600 stroke-[2.2]" />
-              </div>
-              <div className="text-left">
-                <div className="text-xs text-slate-400 font-medium">Izin</div>
-                <div className="text-xl sm:text-2xl font-bold text-slate-900 font-sans tracking-tight">
-                  35
-                </div>
-              </div>
-            </div>
-
-            {/* Sakit */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                <User className="w-5 h-5 text-purple-600 stroke-[2.2]" />
-              </div>
-              <div className="text-left">
-                <div className="text-xs text-slate-400 font-medium">Sakit</div>
-                <div className="text-xl sm:text-2xl font-bold text-slate-900 font-sans tracking-tight">
-                  28
-                </div>
-              </div>
-            </div>
-
-            {/* Tidak Hadir */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-3.5 col-span-2 sm:col-span-1">
-              <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                <X className="w-6 h-6 text-rose-600 stroke-[2.8]" />
-              </div>
-              <div className="text-left">
-                <div className="text-xs text-slate-400 font-medium">Tidak Hadir</div>
-                <div className="text-xl sm:text-2xl font-bold text-slate-900 font-sans tracking-tight">
-                  67
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 4. Main Data Table Card */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-2xs">
-            <div className="w-full overflow-x-auto scrollbar-thin">
-              <table className="w-full text-left border-collapse min-w-[760px]">
-                <thead>
-                  <tr className="border-b border-slate-100 text-[11px] sm:text-[11.5px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-4 px-4 sm:px-6 w-14 font-bold whitespace-nowrap">NO</th>
-                    <th className="py-4 px-4 sm:px-6 font-bold whitespace-nowrap min-w-[120px]">TANGGAL</th>
-                    <th className="py-4 px-4 sm:px-6 font-bold whitespace-nowrap min-w-[100px]">NIS</th>
-                    <th className="py-4 px-4 sm:px-6 font-bold whitespace-nowrap min-w-[150px]">NAMA SISWA</th>
-                    <th className="py-4 px-4 sm:px-6 font-bold whitespace-nowrap min-w-[100px]">KELAS</th>
-                    <th className="py-4 px-4 sm:px-6 font-bold whitespace-nowrap min-w-[100px]">JURUSAN</th>
-                    <th className="py-4 px-4 sm:px-6 font-bold text-center whitespace-nowrap min-w-[110px]">STATUS</th>
-                    <th className="py-4 px-4 sm:px-6 font-bold text-center whitespace-nowrap min-w-[100px]">WAKTU</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100/80 text-[13px] sm:text-[13.5px]">
-                  {records.map((row, idx) => (
-                    <tr key={row.no} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-4 px-4 sm:px-6 text-slate-600 font-medium whitespace-nowrap">
-                        {idx + 1}
-                      </td>
-                      <td className="py-4 px-4 sm:px-6 text-slate-700 font-medium whitespace-nowrap">
-                        {row.tanggal}
-                      </td>
-                      <td className="py-4 px-4 sm:px-6 text-slate-600 font-mono whitespace-nowrap">
-                        {row.nis}
-                      </td>
-                      <td className="py-4 px-4 sm:px-6 font-medium text-slate-900 whitespace-nowrap">
-                        {row.nama}
-                      </td>
-                      <td className="py-4 px-4 sm:px-6 text-slate-700 font-medium whitespace-nowrap">
-                        {row.kelas}
-                      </td>
-                      <td className="py-4 px-4 sm:px-6 text-slate-700 font-medium whitespace-nowrap">
-                        {row.jurusan}
-                      </td>
-                      <td className="py-4 px-4 sm:px-6 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-3.5 py-1 text-xs font-semibold rounded-full shadow-2xs ${getStatusBadge(
-                            row.status
-                          )}`}
+                    {/* Jurusan */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+                        <label className="text-xs font-bold text-slate-700">Jurusan</label>
+                        <select
+                            value={jurusan}
+                            onChange={(e) => setJurusan(e.target.value)}
+                            className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                         >
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 sm:px-6 text-center font-mono text-slate-600 whitespace-nowrap">
-                        {row.waktu}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                            <option value="Semua">Semua Jurusan</option>
+                            {jurusans.map((j, idx) => (
+                                <option key={idx} value={j}>{j}</option>
+                            ))}
+                        </select>
+                    </div>
 
-          {/* 5. Export ke Excel Button below table (Switches to Export Screen!) */}
-          <div className="text-left pt-1">
-            <button
-              onClick={() => setActiveMode('export')}
-              className="bg-[#059669] hover:bg-[#047857] text-white px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-[13.5px] flex items-center gap-2 transition-all shadow-xs hover:shadow-md cursor-pointer"
-            >
-              <FileSpreadsheet className="w-4 h-4 stroke-[2.2]" />
-              <span>Export Excel</span>
-            </button>
-          </div>
+                    {/* Kelas */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+                        <label className="text-xs font-bold text-slate-700">Kelas</label>
+                        <select
+                            value={kelasId}
+                            onChange={(e) => setKelasId(e.target.value)}
+                            className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        >
+                            <option value="Semua">Semua Kelas</option>
+                            {kelases.map((k) => (
+                                <option key={k.id} value={k.id}>{k.nama_kelas}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+                        <label className="text-xs font-bold text-slate-700">Status</label>
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        >
+                            <option value="Semua">Semua Status</option>
+                            <option value="Hadir">Hadir</option>
+                            <option value="Terlambat">Terlambat</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Sakit">Sakit</option>
+                            <option value="Alpha">Tidak Hadir</option>
+                        </select>
+                    </div>
+
+                    {/* Tombol Tampilkan */}
+                    <div>
+                        <button
+                            type="submit"
+                            className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer"
+                        >
+                            Tampilkan
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {/* Cards Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">✓</div>
+                    <div>
+                        <p className="text-xs text-slate-400 font-medium">Hadir</p>
+                        <p className="text-xl font-extrabold text-slate-800">{summary.hadir}</p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold">🕒</div>
+                    <div>
+                        <p className="text-xs text-slate-400 font-medium">Terlambat</p>
+                        <p className="text-xl font-extrabold text-slate-800">{summary.terlambat}</p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold">📄</div>
+                    <div>
+                        <p className="text-xs text-slate-400 font-medium">Izin</p>
+                        <p className="text-xl font-extrabold text-slate-800">{summary.izin}</p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">👤</div>
+                    <div>
+                        <p className="text-xs text-slate-400 font-medium">Sakit</p>
+                        <p className="text-xl font-extrabold text-slate-800">{summary.sakit}</p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold">✕</div>
+                    <div>
+                        <p className="text-xs text-slate-400 font-medium">Tidak Hadir</p>
+                        <p className="text-xl font-extrabold text-slate-800">{summary.tidak_hadir}</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tabel Data Presensi */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-100">
+                        <tr>
+                            <th className="p-4">NO</th>
+                            <th className="p-4">TANGGAL</th>
+                            <th className="p-4">NIS</th>
+                            <th className="p-4">NAMA SISWA</th>
+                            <th className="p-4">KELAS</th>
+                            <th className="p-4">JURUSAN</th>
+                            <th className="p-4">STATUS</th>
+                            <th className="p-4">WAKTU</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 text-slate-700">
+                        {presensis.length > 0 ? (
+                            presensis.map((item, idx) => (
+                                <tr key={item.id} className="hover:bg-slate-50/50 transition">
+                                    <td className="p-4 text-slate-400">{idx + 1}</td>
+                                    <td className="p-4 font-medium">{item.tanggal}</td>
+                                    <td className="p-4 text-slate-500">{item.siswa?.nisn ?? '-'}</td>
+                                    <td className="p-4 font-semibold text-slate-900">{item.siswa?.nama_siswa ?? 'Siswa Tidak Ditemukan'}</td>
+                                    <td className="p-4">{item.siswa?.kelas?.nama_kelas ?? '-'}</td>
+                                    <td className="p-4">{item.siswa?.kelas?.jurusan ?? '-'}</td>
+                                    <td className="p-4">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                            item.status === 'Hadir' ? 'bg-emerald-50 text-emerald-600' :
+                                            item.status === 'Terlambat' ? 'bg-amber-50 text-amber-600' :
+                                            item.status === 'Sakit' ? 'bg-purple-50 text-purple-600' :
+                                            'bg-rose-50 text-rose-600'
+                                        }`}>
+                                            {item.status}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">{item.waktu ?? '-'}</td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={8} className="text-center py-10 text-slate-400 font-medium">
+                                    Tidak ada data presensi pada periode ini.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Tombol Export ke Excel */}
+            <div className="pt-2">
+                <button
+                    type="button"
+                    onClick={handleExportExcel}
+                    className="inline-flex items-center gap-2.5 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer"
+                >
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6zm10.5-8l-2.1 3.5 2.1 3.5h-1.8l-1.2-2.2-1.2 2.2h-1.8l2.1-3.5-2.1-3.5h1.8l1.2 2.2 1.2-2.2h1.8z"/>
+                    </svg>
+                    Export ke Excel
+                </button>
+            </div>
         </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* VIEW 2: EXPORT LAPORAN KE EXCEL (Opens after clicking button) */}
-      {/* ======================================================== */}
-      {activeMode === 'export' && (
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-6 sm:p-9 shadow-xs relative animate-in fade-in duration-200">
-          {/* Card Header: Title & Breadcrumb */}
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-7 pb-2 border-b border-slate-100">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                Export Laporan ke Excel
-              </h1>
-              <p className="text-xs sm:text-[13px] text-slate-400 mt-1 font-medium flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setActiveMode('tabel')}
-                  className="hover:text-blue-600 transition-colors cursor-pointer"
-                >
-                  Export Excel
-                </button>
-                <span>&gt;</span>
-                <span className="text-slate-800 font-bold">Pilih Data</span>
-              </p>
-            </div>
-          </div>
-
-          {/* 2-Column Content Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Form: Filters & Export Button (lg:col-span-7) */}
-            <div className="lg:col-span-7 space-y-4">
-              {/* Field 1: Jenis Laporan */}
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  Jenis Laporan
-                </label>
-                <div className="relative">
-                  <select
-                    value={jenisLaporan}
-                    onChange={(e) => setJenisLaporan(e.target.value)}
-                    className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-9 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                  >
-                    <option value="Presensi Siswa">Presensi Siswa</option>
-                    <option value="Rekap Bulanan">Rekap Bulanan</option>
-                    <option value="Presensi Guru & Staf">Presensi Guru & Staf</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Field 2 & 3: Periode Bulan & Periode Tahun */}
-              <div className="grid grid-cols-2 gap-3.5">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                    Periode Bulan
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-9 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                    >
-                      {months.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                    Periode Tahun
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(e.target.value)}
-                      className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-9 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                    >
-                      <option value="2026">2026</option>
-                      <option value="2025">2025</option>
-                      <option value="2024">2024</option>
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Field 4 & 5: Jurusan & Kelas */}
-              <div className="grid grid-cols-2 gap-3.5">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                    Jurusan
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedJurusan}
-                      onChange={(e) => setSelectedJurusan(e.target.value)}
-                      className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-9 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                    >
-                      <option value="Semua Jurusan">Semua Jurusan</option>
-                      <option value="TKJ">TKJ</option>
-                      <option value="AKL">AKL</option>
-                      <option value="OTPK">OTPK</option>
-                      <option value="BDP">BDP</option>
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                    Kelas
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedKelas}
-                      onChange={(e) => setSelectedKelas(e.target.value)}
-                      className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-9 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                    >
-                      <option value="Semua Kelas">Semua Kelas</option>
-                      <option value="X AKL">X AKL</option>
-                      <option value="X BDP">X BDP</option>
-                      <option value="XI TKJ">XI TKJ</option>
-                      <option value="XI OTPK">XI OTPK</option>
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Field 6: Status Kehadiran */}
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                  Status Kehadiran
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-9 text-xs sm:text-[13px] text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-xs"
-                  >
-                    <option value="Semua Status">Semua Status</option>
-                    <option value="Hadir">Hadir</option>
-                    <option value="Terlambat">Terlambat</option>
-                    <option value="Izin">Izin</option>
-                    <option value="Sakit">Sakit</option>
-                    <option value="Tidak Hadir">Tidak Hadir</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Action Buttons: Export ke Excel & Back to Table */}
-              <div className="pt-3 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleDownloadFile}
-                  className="bg-[#059669] hover:bg-[#047857] text-white px-6 py-2.5 rounded-xl font-semibold text-xs sm:text-[13.5px] flex items-center gap-2 transition-all shadow-xs hover:shadow-md cursor-pointer"
-                >
-                  <FileSpreadsheet className="w-4 h-4 stroke-[2.2]" />
-                  <span>Export ke Excel</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveMode('tabel')}
-                  className="text-slate-600 hover:text-blue-600 text-xs font-semibold px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Kembali ke Tabel Data</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Right Column: HASIL FILE EXCEL Box (lg:col-span-5) */}
-            <div className="lg:col-span-5">
-              <div className="bg-emerald-50/30 border border-emerald-200/80 rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center justify-center shadow-xs">
-                {/* Section Header */}
-                <h3 className="text-[11.5px] font-bold text-emerald-800 tracking-wider uppercase mb-5">
-                  HASIL FILE EXCEL
-                </h3>
-
-                {/* Big Green Excel File Icon */}
-                <div className="w-[78px] h-[78px] rounded-2xl bg-[#059669] text-white flex flex-col items-center justify-center shadow-md shadow-emerald-700/25 mb-4 select-none transition-transform hover:scale-105 duration-200">
-                  <div className="w-7 h-7 rounded-md bg-white/20 flex items-center justify-center mb-1">
-                    <span className="text-white text-base font-black tracking-tight leading-none">
-                      X
-                    </span>
-                  </div>
-                  <span className="text-[9.5px] font-bold text-white tracking-widest leading-none">
-                    XLSX
-                  </span>
-                </div>
-
-                {/* File Name */}
-                <h4 className="text-[13px] sm:text-[13.5px] font-bold text-slate-800 max-w-[240px] leading-snug break-words mb-1">
-                  {currentFileName}
-                </h4>
-
-                {/* File Size */}
-                <p className="text-xs text-slate-400 font-normal mb-4">
-                  Ukuran Berkas: <span className="font-semibold text-slate-600">42 KB</span>
-                </p>
-
-                {/* Status Badge */}
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold mb-3">
-                  <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Berhasil diexport</span>
-                </div>
-
-                {/* Unduh Berkas Ulang Action */}
-                <button
-                  type="button"
-                  onClick={handleDownloadFile}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline transition-all cursor-pointer mt-1"
-                >
-                  <Download className="w-3.5 h-3.5 stroke-[2.2]" />
-                  <span>Unduh Berkas Ulang</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 };
+
+export default LaporanPageView;

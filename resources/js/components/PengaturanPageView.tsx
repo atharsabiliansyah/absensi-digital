@@ -769,18 +769,7 @@ export const PengaturanPageView: React.FC<PengaturanPageViewProps> = ({
       {/* 🖥️ DESKTOP VIEW: Full Configuration & Parameter Controls (Screens >= 768px) */}
       {/* ========================================================================= */}
       <div className="hidden md:block space-y-6">
-        {/* Header & Breadcrumb */}
-        <div className="text-left">
-          <h1 className="text-[25px] sm:text-[27px] font-bold text-[#1e293b] tracking-tight leading-tight">
-            Pengaturan Sistem
-          </h1>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1 font-medium">
-            <span className="hover:text-slate-600 transition-colors cursor-pointer">Pengaturan</span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-semibold text-slate-600">Konfigurasi Parameter &amp; Jadwal</span>
-          </div>
-        </div>
-
+        
         {/* Sub-Navigation Tabs Card */}
         <div className="flex">
           <div className="bg-white rounded-2xl shadow-xs border border-slate-100 px-5 pt-3 pb-0 flex items-center gap-8">
@@ -1196,11 +1185,7 @@ export const PengaturanPageView: React.FC<PengaturanPageViewProps> = ({
 
             {/* Bottom Action Footer Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
-              <p className="text-xs text-slate-500 font-medium text-center sm:text-left">
-                Perubahan jadwal akan langsung berlaku pada mesin sensor RFID siswa.
-              </p>
-
-              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={handleResetSchedule}
@@ -1221,11 +1206,7 @@ export const PengaturanPageView: React.FC<PengaturanPageViewProps> = ({
           </div>
         )}
 
-        {/* Footer Branding text */}
-        <footer className="pt-8 pb-4 text-center text-xs text-slate-400 font-medium">
-          © 2026 SMK PGRI 11 CILEDUG - Sistem Presensi Digital Berbasis RFID dan IoT. Hak Cipta Dilindungi.
-        </footer>
-      </div>
+         </div>
 
       {/* Change Photo Modal */}
       <ChangePhotoModal
