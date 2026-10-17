@@ -6,9 +6,18 @@ use App\Models\Siswa;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Inertia;
 
 class SiswaWebController extends Controller
 {
+    /**
+     * Menampilkan halaman utama Data Siswa via Inertia.js
+     */
+    public function index()
+    {
+            return Inertia::render('DataSiswa');        
+    }
+
     public function getSiswaList(Request $request)
     {
         $query = Siswa::with('kelas');
@@ -119,7 +128,6 @@ class SiswaWebController extends Controller
         ]);
     }
 
-   
     public function destroy($id)
     {
         $siswa = Siswa::findOrFail($id);

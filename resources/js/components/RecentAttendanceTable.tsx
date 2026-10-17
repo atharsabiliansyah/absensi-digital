@@ -74,16 +74,14 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
             {displayRecords.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-8 text-center text-slate-400 text-xs sm:text-sm font-medium">
-                  Belum ada presensi hari ini.
+                  Belum ada presensi hari ini
                 </td>
               </tr>
             ) : (
               displayRecords.map((record) => {
-                // Ekstraksi nilai jam masuk & pulang (mendukung format API Laravel maupun Mock)
                 const jamMasuk = record.waktu || record.waktu_masuk || '-';
                 const jamPulang = record.waktu_pulang || null;
 
-                // Ekstraksi info siswa
                 const namaSiswa = record.siswa?.nama_siswa || record.nama || '-';
                 const kelasSiswa = record.siswa?.kelas?.nama_kelas || record.kelas || '-';
                 const jurusanSiswa = record.siswa?.kelas?.jurusan || record.jurusan || '-';

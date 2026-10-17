@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Cache;
 
 class PresensiController extends Controller
 {
-    
     public function store(Request $request)
     {
         $request->validate([
@@ -23,7 +22,6 @@ class PresensiController extends Controller
         return response()->json($result['data'], $result['http_code']);
     }
 
-    
     public function scanHandler(Request $request)
     {
         $rawUid = $request->input('rfid_uid');
@@ -50,7 +48,6 @@ class PresensiController extends Controller
         return response("NO|" . $result['data']['message'], 200)->header('Content-Type', 'text/plain');
     }
 
-    
     private function prosesPresensi($rawUid)
     {
         $uidClean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $rawUid));
@@ -79,6 +76,19 @@ class PresensiController extends Controller
         }
 
         $now = Carbon::now('Asia/Jakarta');
+        $dayOfWeek = (int) $now->format('N'); // 1 (Senin) - 7 (Minggu)
+
+        // Cek jika hari Minggu (Hari Libur)
+        if ($dayOfWeek === 7) {
+            return [
+                'http_code' => 200,
+                'data' => [
+                    'status' => 'error',
+                    'message' => 'Sistem Libur (Hari Minggu)'
+                ]
+            ];
+        }
+
         $today = $now->toDateString();
         $currentTime = $now->toTimeString();
 
@@ -86,8 +96,10 @@ class PresensiController extends Controller
             ->whereDate('tanggal', $today)
             ->first();
 
+        // TAP 1: PRESENSI MASUK
         if (!$presensi) {
-            $jamBatas = '07:00:00';
+            // Ambil batas toleransi sesuai jadwal harian sekolah
+            $jamBatas = $this->getBatasToleransiHariIni($now);
             $status = ($currentTime <= $jamBatas) ? 'Hadir' : 'Terlambat';
 
             Presensi::create([
@@ -129,6 +141,7 @@ class PresensiController extends Controller
             ];
         }
 
+        // TAP 3 DAN SETERUSNYA
         return [
             'http_code' => 200,
             'data' => [
@@ -136,5 +149,43 @@ class PresensiController extends Controller
                 'message' => 'Sudah Absen Masuk & Pulang'
             ]
         ];
+    }
+
+    /**
+     * Menentukan batas toleransi keterlambatan berdasarkan jadwal operasional harian
+     */
+    private function getBatasToleransiHariIni(Carbon $now): string
+    {
+        $dayOfWeek = (int) $now->format('N');
+
+        // 1. Cek dari database jika tabel/model JamOperasional ada
+        try {
+            if (class_exists('App\Models\JamOperasional')) {
+                $hariIndo = match ($dayOfWeek) {
+                    1 => 'Senin',
+                    2 => 'Selasa',
+                    3 => 'Rabu',
+                    4 => 'Kamis',
+                    5 => 'Jumat',
+                    6 => 'Sabtu',
+                    default => 'Minggu',
+                };
+
+                $config = \App\Models\JamOperasional::where('hari', 'like', "%{$hariIndo}%")->first();
+                if ($config && !empty($config->batas_toleransi)) {
+                    return $config->batas_toleransi;
+                }
+            }
+        } catch (\Throwable $e) {
+            
+        }
+
+        
+        return match ($dayOfWeek) {
+            1 => '07:30:00', 
+            5 => '07:05:00', 
+            6 => '08:00:00', 
+            default => '07:15:00', 
+        };
     }
 }

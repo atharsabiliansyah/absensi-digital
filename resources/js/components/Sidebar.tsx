@@ -76,16 +76,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Bottom Section: Keluar / Logout */}
-      <div className="p-5 border-t border-white/5">
-        <button
-          onClick={onLogoutClick}
-          className="w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-[15px] font-medium text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
-        >
-          <LogOut className="w-5 h-5 shrink-0 text-slate-400" />
-          <span>Keluar</span>
-        </button>
-      </div>
-    </aside>
+     </aside>
   );
 };
