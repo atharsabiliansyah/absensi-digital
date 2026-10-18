@@ -288,7 +288,7 @@ export const DataSiswaPageView: React.FC = () => {
               ) : currentSiswaData.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
-                    Belum ada data siswa terdaftar.
+                    Belum ada data siswa terdaftar
                   </td>
                 </tr>
               ) : (

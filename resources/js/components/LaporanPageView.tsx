@@ -64,7 +64,6 @@ export const LaporanPageView: React.FC<Props> = ({
     const [kelasId, setKelasId] = useState(filters.kelas_id || 'Semua');
     const [status, setStatus] = useState(filters.status || 'Semua');
 
-    // Sinkronkan state dropdown dengan data filter dari server
     useEffect(() => {
         if (filters.bulan) setBulan(filters.bulan);
         if (filters.tahun) setTahun(filters.tahun);
@@ -201,40 +200,55 @@ export const LaporanPageView: React.FC<Props> = ({
 
             {/* Cards Summary */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+               
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">✓</div>
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <i className="fi fi-rr-check text-lg leading-none"></i>
+                    </div>
                     <div>
                         <p className="text-xs text-slate-400 font-medium">Hadir</p>
                         <p className="text-xl font-extrabold text-slate-800">{summary.hadir}</p>
                     </div>
                 </div>
 
+               
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold">🕒</div>
+                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                        <i className="fi fi-rr-clock text-lg leading-none"></i>
+                    </div>
                     <div>
                         <p className="text-xs text-slate-400 font-medium">Terlambat</p>
                         <p className="text-xl font-extrabold text-slate-800">{summary.terlambat}</p>
                     </div>
                 </div>
 
+                
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold">📄</div>
+                    <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center">
+                        <i className="fi fi-rr-document text-lg leading-none"></i>
+                    </div>
                     <div>
                         <p className="text-xs text-slate-400 font-medium">Izin</p>
                         <p className="text-xl font-extrabold text-slate-800">{summary.izin}</p>
                     </div>
                 </div>
 
+              
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">👤</div>
+                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                        <i className="fi fi-rr-user text-lg leading-none"></i>
+                    </div>
                     <div>
                         <p className="text-xs text-slate-400 font-medium">Sakit</p>
                         <p className="text-xl font-extrabold text-slate-800">{summary.sakit}</p>
                     </div>
                 </div>
 
+                
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold">✕</div>
+                    <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+                        <i className="fi fi-rr-cross-small text-xl leading-none"></i>
+                    </div>
                     <div>
                         <p className="text-xs text-slate-400 font-medium">Tidak Hadir</p>
                         <p className="text-xl font-extrabold text-slate-800">{summary.tidak_hadir}</p>

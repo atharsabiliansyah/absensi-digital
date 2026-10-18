@@ -1198,7 +1198,7 @@ export const PengaturanPageView: React.FC<PengaturanPageViewProps> = ({
                   onClick={handleSaveSchedule}
                   className="px-5 py-2 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                <span>Simpan Jadwal Presensi</span>
+                <span>Simpan Jadwal </span>
                 </button>
               </div>
             </div>
