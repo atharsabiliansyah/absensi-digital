@@ -26,7 +26,6 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [navWidth, setNavWidth] = useState<number>(360);
 
-  // Track exact container width to position liquid wave and bubble pixel-perfectly
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
@@ -47,7 +46,6 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
   const itemWidth = navWidth > 0 ? navWidth / numItems : 120;
   const cx = activeIndex * itemWidth + itemWidth / 2;
 
-  // Geometry parameters for liquid wave
   const W = navWidth || 360;
   const H = 76;
   const yBase = 20;
@@ -97,7 +95,6 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
         ref={containerRef}
         className="relative w-full max-w-sm mx-auto pointer-events-auto h-[82px]"
       >
-        {/* Unified Liquid Background with Smooth Wave & Drop Shadow */}
         <div className="absolute inset-0 filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.12)]">
           <svg
             width={W}
@@ -113,7 +110,6 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
           </svg>
         </div>
 
-        {/* Sliding Elevated Liquid Bubble Button */}
         {isTabInNav && (
           <div
             className="absolute -top-2.5 z-20 transition-all duration-300 ease-out pointer-events-none"
@@ -140,17 +136,14 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
                 onClick={() => onSelectTab(item.id)}
                 className="flex flex-col items-center justify-end pb-3.5 cursor-pointer outline-hidden group relative"
               >
-                {/* Inactive Icon */}
                 {!isActive ? (
                   <div className="text-slate-400 group-hover:text-slate-600 transition-colors mb-1">
                     <Icon className="w-5 h-5 stroke-[1.9]" />
                   </div>
                 ) : (
-                  /* Placeholder space for the active bubble */
                   <div className="w-5 h-5 mb-1" />
                 )}
 
-                {/* Tab Label */}
                 <span
                   className={`text-[11px] tracking-tight leading-none transition-colors ${
                     isActive
@@ -165,7 +158,6 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
           })}
         </div>
 
-        {/* Bottom iOS Home Indicator Line */}
         <div className="absolute bottom-1.5 inset-x-0 flex justify-center pointer-events-none">
           <div className="w-24 h-1 bg-slate-300/80 rounded-full" />
         </div>

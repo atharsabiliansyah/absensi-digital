@@ -48,9 +48,9 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
 
   return (
     <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 px-3.5 sm:px-8 lg:px-10 py-2.5 sm:py-3.5 flex items-center justify-between">
-      {/* 1. MOBILE HEADER: PGRI Logo, Title, Notification Bell & Avatar Photo with BG Initial */}
+
       <div className="flex md:hidden items-center justify-between w-full">
-        {/* Left: School Logo & Info */}
+
         <div className="flex items-center gap-2.5">
           <PgriLogo size={32} className="shrink-0" />
           <div className="text-left leading-tight">
@@ -63,9 +63,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
           </div>
         </div>
 
-        {/* Right: Notification Bell + Photo Avatar */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Notification Bell Button */}
           <button
             type="button"
             onClick={() => setIsNotifOpen(true)}
@@ -76,7 +74,6 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
             <Bell className="w-4 h-4 text-slate-600" />
           </button>
 
-          {/* User Profile Avatar with Teacher Photo */}
           <button
             type="button"
             onClick={() => setIsProfileModalOpen(true)}
@@ -96,9 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
         </div>
       </div>
 
-      {/* 3. DESKTOP RIGHT: Notification Bell, Full User Profile & Digital Clock */}
       <div className="hidden md:flex items-center gap-4 relative ml-auto">
-        {/* Desktop Notification Bell Button */}
         <button
           type="button"
           onClick={() => setIsNotifOpen(true)}
@@ -110,7 +105,6 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
           <Bell className="w-4 h-4 text-slate-600" />
         </button>
 
-        {/* Profile Card Pill with Photo */}
         <div
           onClick={() => setIsProfileModalOpen(true)}
           className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 py-1 px-2.5 rounded-2xl transition-colors select-none border border-transparent hover:border-slate-200"
@@ -140,10 +134,8 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
           </div>
         </div>
 
-        {/* Vertical Divider */}
         <div className="h-8 w-px bg-slate-200/90 shrink-0" aria-hidden="true" />
 
-        {/* Digital Clock display */}
         <div className="text-right leading-tight select-none">
           <div className="text-[16px] font-bold text-slate-900 font-mono tracking-tight flex items-baseline justify-end whitespace-nowrap">
             <span>{currentTime}</span>
@@ -155,7 +147,6 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
         </div>
       </div>
 
-      {/* Notifications Drawer Modal */}
       <NotificationModal
         isOpen={isNotifOpen}
         onClose={() => setIsNotifOpen(false)}
@@ -165,7 +156,6 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, onLogoutClick }) => 
         }}
       />
 
-      {/* Rich User Profile Modal */}
       <UserProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}

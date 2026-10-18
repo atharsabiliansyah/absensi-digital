@@ -19,7 +19,7 @@ export interface PresensiItem {
 }
 
 export const PresensiPageView: React.FC = () => {
-  // Ambil tanggal hari ini dalam format YYYY-MM-DD
+
   const getTodayString = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -28,25 +28,21 @@ export const PresensiPageView: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // State Data Presensi (Diacak ke [] / Kosong di awal)
   const [data, setData] = useState<PresensiItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [totalSiswa, setTotalSiswa] = useState<number>(0);
 
-  // State Filter
   const [tanggal, setTanggal] = useState<string>(getTodayString());
   const [jurusan, setJurusan] = useState<string>('Semua Jurusan');
   const [kelas, setKelas] = useState<string>('Semua Kelas');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
-  // Notification Toast State
   const [notification, setNotification] = useState<{
     visible: boolean;
     studentName: string;
   } | null>(null);
 
-  // Fungsi Fetch Data dari Endpoint Backend Laravel
   const fetchPresensi = async () => {
     setLoading(true);
     try {
@@ -60,7 +56,6 @@ export const PresensiPageView: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         
-        // MAPPING DATA DARI DATABASE KE FORMAT PRESENSIITEM
         const formattedData: PresensiItem[] = (result.data || []).map((item: any, index: number) => ({
           no: index + 1,
           nis: item.siswa?.nisn || '-',
@@ -81,7 +76,6 @@ export const PresensiPageView: React.FC = () => {
     }
   };
 
-  // Panggil data saat komponen pertama kali dimuat
   useEffect(() => {
     fetchPresensi();
   }, []);
@@ -211,7 +205,7 @@ export const PresensiPageView: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 relative pb-28 md:pb-10 max-w-full">
-      {/* Toast Notification */}
+
       {notification && notification.visible && (
         <div className="fixed top-4 left-4 right-4 z-50 flex justify-center">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3.5 pl-4 pr-5 py-3 w-full max-w-md relative overflow-hidden">
@@ -235,7 +229,6 @@ export const PresensiPageView: React.FC = () => {
         </div>
       )}
 
-      {/* MOBILE VIEW */}
       <div className="block md:hidden space-y-4">
         <div className="bg-white rounded-[22px] shadow-xs border border-slate-100 p-4 space-y-3.5">
           <div className="flex items-center gap-2">
@@ -305,7 +298,6 @@ export const PresensiPageView: React.FC = () => {
           </button>
         </div>
 
-        {/* List Card Mobile */}
         <div className="space-y-2.5">
           {loading ? (
             <div className="text-center py-8 text-xs text-slate-400">Memuat data presensi...</div>
@@ -342,7 +334,6 @@ export const PresensiPageView: React.FC = () => {
         </div>
       </div>
 
-      {/* DESKTOP VIEW */}
       <div className="hidden md:block space-y-6">
         <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-5">
           <div className="flex flex-wrap items-center gap-6">

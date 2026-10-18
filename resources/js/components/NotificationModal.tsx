@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Bell,
   CheckCircle2,
@@ -8,8 +8,6 @@ import {
   X,
   CheckCheck,
   ChevronRight,
-  ShieldCheck,
-  AlertTriangle,
 } from 'lucide-react';
 
 export interface SystemNotification {
@@ -22,55 +20,102 @@ export interface SystemNotification {
   priority?: 'normal' | 'high';
 }
 
-const INITIAL_NOTIFICATIONS: SystemNotification[] = [
-  {
-    id: 'notif-1',
-    title: 'Presensi Siswa Pagi Berjalan',
-    message: '524 siswa dari 580 total siswa telah berhasil melakukan tap kartu RFID di gerbang masuk.',
-    time: '5 menit yang lalu',
-    category: 'presensi',
-    read: false,
-    priority: 'high',
-  },
-  {
-    id: 'notif-2',
-    title: 'Batas Waktu Toleransi Keterlambatan',
-    message: 'Batas toleransi kehadiran upacara Senin berakhir pukul 07:30 WIB. Scan setelah waktu ini dihitung terlambat.',
-    time: '25 menit yang lalu',
-    category: 'jadwal',
-    read: false,
-  },
-  {
-    id: 'notif-3',
-    title: 'Mesin RFID Gerbang Terhubung',
-    message: 'Sensor RFID modul #01 terhubung ke server cloud IoT dengan latensi stabil (18ms).',
-    time: '1 jam yang lalu',
-    category: 'hardware',
-    read: false,
-  },
-  {
-    id: 'notif-4',
-    title: 'Rekap Kehadiran Mingguan Tersedia',
-    message: 'Laporan absensi kelas XII TKJ 1 periode pekan lalu telah siap untuk diekspor ke Excel.',
-    time: 'Kemarin, 15:40 WIB',
-    category: 'laporan',
-    read: true,
-  },
-];
-
 interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenPresensi?: () => void;
+  stats?: {
+    hadir?: number;
+    total_siswa?: number;
+  };
 }
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
   isOpen,
   onClose,
   onOpenPresensi,
+  stats = { hadir: 5, total_siswa: 10 },
 }) => {
-  const [notifications, setNotifications] = useState<SystemNotification[]>(INITIAL_NOTIFICATIONS);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+
+  // Deteksi jadwal toleransi harian otomatis
+  const getToleransiHariIni = () => {
+    const day = new Date().getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+    switch (day) {
+      case 1:
+        return { jam: '07:30 WIB', ket: 'upacara Senin' };
+      case 5:
+        return { jam: '07:05 WIB', ket: 'kegiatan Jumat Berkah' };
+      case 6:
+        return { jam: '08:00 WIB', ket: 'presensi Sabtu' };
+      default:
+        return { jam: '07:15 WIB', ket: 'pembelajaran reguler' };
+    }
+  };
+
+  const toleransi = getToleransiHariIni();
+  const totalHadir = stats.hadir ?? 0;
+  const totalSiswa = stats.total_siswa ?? 0;
+
+  // Generate notifikasi dinamis berdasarkan data terkini
+  const initialData: SystemNotification[] = [
+    {
+      id: 'notif-1',
+      title: 'Presensi Siswa Berjalan',
+      message: `${totalHadir} siswa dari ${totalSiswa} total siswa telah berhasil melakukan tap kartu RFID di gerbang masuk.`,
+      time: 'Baru saja',
+      category: 'presensi',
+      read: false,
+      priority: 'high',
+    },
+    {
+      id: 'notif-2',
+      title: 'Batas Waktu Toleransi Keterlambatan',
+      message: `Batas toleransi kehadiran ${toleransi.ket} berakhir pukul ${toleransi.jam}. Scan setelah waktu ini dihitung terlambat.`,
+      time: 'Hari ini',
+      category: 'jadwal',
+      read: false,
+    },
+    {
+      id: 'notif-3',
+      title: 'Mesin RFID Gerbang Terhubung',
+      message: 'Sensor RFID modul #01 terhubung ke server cloud IoT dengan latensi stabil (18ms).',
+      time: '1 jam yang lalu',
+      category: 'hardware',
+      read: false,
+    },
+    {
+      id: 'notif-4',
+      title: 'Rekap Kehadiran Harian Tersedia',
+      message: 'Laporan absensi periode berjalan telah siap untuk direkap dan diekspor ke format CSV.',
+      time: 'Kemarin, 15:40 WIB',
+      category: 'laporan',
+      read: true,
+    },
+  ];
+
+  const [notifications, setNotifications] = useState<SystemNotification[]>(initialData);
+
+  // Perbarui notifikasi ketika props stats berubah
+  useEffect(() => {
+    setNotifications((prev) =>
+      prev.map((item) => {
+        if (item.id === 'notif-1') {
+          return {
+            ...item,
+            message: `${totalHadir} siswa dari ${totalSiswa} total siswa telah berhasil melakukan tap kartu RFID di gerbang masuk.`,
+          };
+        }
+        if (item.id === 'notif-2') {
+          return {
+            ...item,
+            message: `Batas toleransi kehadiran ${toleransi.ket} berakhir pukul ${toleransi.jam}. Scan setelah waktu ini dihitung terlambat.`,
+          };
+        }
+        return item;
+      })
+    );
+  }, [totalHadir, totalSiswa]);
 
   if (!isOpen) return null;
 
@@ -172,7 +217,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Semua 
+              Semua
             </button>
             <button
               type="button"
@@ -183,7 +228,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Belum Dibaca 
+              Belum Dibaca
             </button>
           </div>
 
@@ -207,9 +252,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 <Bell className="w-6 h-6" />
               </div>
               <p className="text-sm font-bold text-slate-700">Tidak ada notifikasi</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Semua notifikasi
-              </p>
+              <p className="text-xs text-slate-400 mt-1">Semua notifikasi telah dibaca</p>
             </div>
           ) : (
             displayedNotifications.map((item) => (

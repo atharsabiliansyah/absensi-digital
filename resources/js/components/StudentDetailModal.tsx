@@ -76,16 +76,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ record, 
               {record.nisn}
             </p>
           </div>
-
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Phone className="w-3.5 h-3.5" /> No. HP Wali Murid
-            </span>
-            <p className="text-xs font-bold text-slate-800 font-mono mt-0.5">
-              {matchedStudent?.noHpOrangTua || '0812-3456-7890'}
-            </p>
           </div>
-        </div>
 
         {record.keterangan && (
           <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-100 mb-4">
@@ -100,16 +91,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ record, 
           >
             Tutup
           </button>
-          <a
-            href={`https://wa.me/?text=Pemberitahuan%20Presensi%20SMK%20PGRI%2011%20CILEDUG:%20Ananda%20${encodeURIComponent(
-              record.nama
-            )}%20(${record.kelas})%20tercatat%20${record.status}%20pukul%20${record.waktu}%20WIB.`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition-colors text-center"
-          >
-            Kirim Notif WA Wali
-          </a>
+          
         </div>
       </div>
     </div>

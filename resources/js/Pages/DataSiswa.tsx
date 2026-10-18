@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head } from '@inertiajs/react'; // 1. Import Head
+import { Head } from '@inertiajs/react'; 
 import { DataSiswaPageView } from '../components/DataSiswaPageView';
 import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 
