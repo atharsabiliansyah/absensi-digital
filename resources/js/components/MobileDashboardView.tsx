@@ -40,7 +40,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
   currentDate,
 }) => {
   const { photo: teacherPhoto } = useProfilePhoto();
-  // Toggle to show all 10 students directly scrolled down inside the dashboard
   const [showAllStudents, setShowAllStudents] = useState<boolean>(false);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
@@ -193,10 +192,9 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
     },
   ];
 
-  // Default mobile dashboard view
   return (
     <div className="md:hidden pb-20 space-y-4 px-1 animate-in fade-in duration-200">
-      {/* 1. Mobile Top Header Bar */}
+
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-xs shrink-0 p-0.5 border border-slate-100 overflow-hidden">
@@ -212,7 +210,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Right notification bell & Avatar with photo */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
@@ -243,9 +240,8 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Hero Gradient Card */}
       <div className="bg-gradient-to-br from-[#0c3260] via-[#104a8e] to-[#1e60d5] text-white rounded-[24px] p-5 relative overflow-hidden shadow-md">
-        {/* RFID Wireless Signal Concentric Waves Watermark */}
+
         <div className="absolute -right-4 -top-4 w-40 h-40 pointer-events-none opacity-15">
           <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" className="w-full h-full text-white">
             <circle cx="90" cy="10" r="20" strokeWidth="2.5" />
@@ -255,7 +251,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </svg>
         </div>
 
-        {/* Top Clock Pill & Date */}
         <div className="flex items-center justify-between text-xs relative z-10">
           <div className="bg-black/25 backdrop-blur-xs text-white px-3 py-1 rounded-full text-[11px] font-mono font-medium flex items-center gap-2 border border-white/10">
             <span>{currentTime || '07:35:21'} WIB</span>
@@ -267,7 +262,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Greeting & Identity */}
         <div className="mt-4 relative z-10">
           <h2 className="text-[17px] font-bold text-white tracking-tight leading-snug">
             Selamat Datang,  Untung Sudarto
@@ -277,7 +271,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </p>
         </div>
 
-        {/* Role Pill Badge */}
         <div className="mt-3.5 relative z-10">
           <div className="bg-white text-[#1e3a8a] px-3.5 py-1.5 rounded-full text-[11.5px] font-bold inline-flex items-center gap-1.5 shadow-xs">
             <GraduationCap className="w-4 h-4 text-[#1e3a8a] shrink-0" />
@@ -286,12 +279,10 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
         </div>
       </div>
 
-      {/* 3. Card: Presensi Terbaru (Langsung scroll ke bawah / expand in-place) */}
       <div
         style={{ padding: '16px 16px 18px 16px' }}
         className="bg-white rounded-[22px] p-4 sm:p-5 shadow-xs border border-slate-100"
       >
-        {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100/60">
           <h3 className="text-[12px] font-bold text-slate-800 tracking-wider uppercase font-sans">
             PRESENSI TERBARU
@@ -311,7 +302,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </button>
         </div>
 
-        {/* Student List - Langsung scroll kebawah di dalam card dashboard */}
         <div
           className={`divide-y divide-slate-100/80 transition-all duration-300 pt-0.5 ${
             showAllStudents
@@ -340,7 +330,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
                 }
                 className="py-3 px-1.5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 rounded-xl transition-colors"
               >
-                {/* Left Initials Circle & Name */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div
                     style={{ width: '36px', height: '36px' }}
@@ -358,7 +347,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
                   </div>
                 </div>
 
-                {/* Right Status Badge & Time */}
                 <div className="text-right flex flex-col items-end shrink-0 pl-2">
                   <span
                     className={`px-3 py-0.5 rounded-full text-[11px] font-semibold border flex items-center gap-1 ${
@@ -384,9 +372,8 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
         </div>
       </div>
 
-      {/* 4. 5 Summary Cards Grid matching user screenshot */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Card 1: Hadir */}
+
         <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-full bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
             <Check className="w-6 h-6 stroke-[3]" />
@@ -399,7 +386,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Card 2: Terlambat */}
         <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-full bg-[#fef3c7] flex items-center justify-center text-[#f59e0b] shrink-0">
             <Clock className="w-6 h-6 stroke-[2.5]" />
@@ -412,7 +398,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Card 3: Izin */}
         <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-full bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
             <FileText className="w-5 h-5 stroke-[2.2]" />
@@ -425,7 +410,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Card 4: Sakit */}
         <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-full bg-[#f3e8ff] flex items-center justify-center text-[#9333ea] shrink-0">
             <User className="w-5 h-5 stroke-[2.2]" />
@@ -438,7 +422,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Card 5: Tidak Hadir (col-span-2 di tengah / rentang penuh) */}
         <div className="col-span-2 bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-full bg-[#fee2e2] flex items-center justify-center text-[#ef4444] shrink-0">
             <X className="w-6 h-6 stroke-[3]" />
@@ -452,7 +435,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Notifications Drawer Modal */}
       <NotificationModal
         isOpen={isNotifOpen}
         onClose={() => setIsNotifOpen(false)}
@@ -462,7 +444,6 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
         }}
       />
 
-      {/* Rich User Profile Modal with Photo & Singkatan Nama */}
       <UserProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}

@@ -74,7 +74,6 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
         className="bg-white rounded-3xl w-full max-w-sm sm:max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1d6ee5] flex items-center justify-center shrink-0">
@@ -100,9 +99,7 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
           </button>
         </div>
 
-        {/* Modal Body */}
         <div className="p-5 sm:p-6 space-y-4">
-          {/* Main Avatar Preview */}
           <div className="flex flex-col items-center justify-center text-center">
             <div
               style={{ width: '100px', height: '100px' }}
@@ -126,7 +123,6 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
             </p>
           </div>
 
-          {/* Hidden Native File Input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -135,7 +131,6 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
             onChange={handleFileChange}
           />
 
-          {/* Upload Dropzone / Button Area */}
           <div
             onClick={() => fileInputRef.current?.click()}
             className="w-full border-2 border-dashed border-blue-200 hover:border-blue-400 bg-blue-50/40 hover:bg-blue-50/70 rounded-2xl p-4 text-center cursor-pointer transition-all group"
@@ -151,7 +146,6 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
             </p>
           </div>
 
-          {/* Error Message */}
           {uploadError && (
             <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 text-xs flex items-center gap-2 font-medium">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -159,7 +153,6 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
             </div>
           )}
 
-          {/* Reset Action */}
           {selectedPhoto !== DEFAULT_PROFILE_PHOTO && (
             <div className="flex justify-center pt-1">
               <button
@@ -171,7 +164,6 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
           )}
         </div>
 
-        {/* Footer with Balanced 2-Column Buttons */}
         <div className="px-5 sm:px-6 py-3.5 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-3">
           <button
             type="button"

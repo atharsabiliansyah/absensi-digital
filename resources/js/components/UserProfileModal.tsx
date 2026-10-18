@@ -39,12 +39,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Cover Banner */}
         <div 
             className="h-24 relative px-5 pt-4 flex justify-end items-start bg-cover bg-center overflow-hidden"
             style={{ backgroundImage: "url('/images/sekola_pgri.png')" }}
         >
-            {/* Lapisan transparan (overlay) agar gambar sedikit redup */}
             <div className="absolute inset-0 bg-black/40"></div>
 
             <button
@@ -57,9 +55,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </button>
         </div>
 
-        {/* Profile Card Body with Overlapping Avatar */}
         <div className="px-6 pt-0 pb-6 relative -mt-12 space-y-4">
-          {/* Avatar (Clean circle without blue camera button) */}
           <div className="flex items-end justify-between">
             <div
               style={{ width: '84px', height: '84px' }}
@@ -77,7 +73,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* Name & Identity */}
           <div>
             <h3 className="text-lg font-bold text-slate-900 leading-tight">
               {teacherData.fullName}
@@ -90,9 +85,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </p>
           </div>
 
-          {/* Information Grid Cards */}
           <div className="bg-slate-50 rounded-2xl p-3.5 space-y-2.5 border border-slate-100 text-xs">
-            {/* NIP */}
+
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-medium">NIP Terdaftar</span>
               <div className="flex items-center gap-1.5">
@@ -105,7 +99,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               </div>
             </div>
 
-            {/* Email */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-medium">Email Institusi</span>
               <span className="font-mono text-slate-700 text-[11.5px]">
@@ -113,7 +106,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               </span>
             </div>
 
-            {/* Hak Akses */}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-medium">Hak Akses Sistem</span>
               <span className="font-medium text-[#1d6ee5]">
@@ -122,24 +114,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* Navigation Action Buttons */}
           <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onNavigateToSettings?.();
-              }}
-              className="w-full py-2.5 px-4 bg-[#1d6ee5] hover:bg-[#1a5fca] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-between cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                <span>Pengaturan Akun</span>
-              </div>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            <button
+             <button
               type="button"
               onClick={() => router.post('/logout')}
               className="w-full py-2.5 px-4 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 text-xs font-semibold rounded-xl transition-colors flex items-center justify-between cursor-pointer"

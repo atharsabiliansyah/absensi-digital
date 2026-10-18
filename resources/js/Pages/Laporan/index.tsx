@@ -55,7 +55,7 @@ interface Props {
 
 export default function Index({ presensis, summary, kelases, jurusans, filters }: Props) {
     return (
-        // @ts-ignore
+        
         <AuthenticatedLayout>
             <Head title="Laporan Presensi - Presensi Digital - SMK PGRI 11 CILEDUG" />
             <div className="p-6">

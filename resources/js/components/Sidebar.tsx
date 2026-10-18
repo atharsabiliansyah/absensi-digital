@@ -28,19 +28,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    /* Main Sidebar - Desktop only (Width 72 / 288px) */
     <aside
       className="hidden md:flex fixed top-0 bottom-0 left-0 z-40 w-72 bg-[#0b192c] text-white flex-col justify-between select-none shadow-none"
     >
-      {/* Top Section: Logo & School Identity */}
       <div>
         <div className="pt-9 pb-7 px-6 flex flex-col items-center text-center relative border-b border-white/5">
-          {/* School Emblem inside white circle badge directly from /images/logo.pgri.png */}
+
           <div className="w-[82px] h-[82px] rounded-full bg-white flex items-center justify-center shadow-lg mb-3.5 overflow-hidden p-1.5">
             <PgriLogo size={62} />
           </div>
 
-          {/* School Name & Tagline */}
           <h1 className="text-[14px] font-bold tracking-wider text-white uppercase font-sans">
             SMK PGRI 11 CILEDUG
           </h1>
@@ -49,7 +46,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </p>
         </div>
 
-        {/* Navigation Links */}
         <nav className="p-4 space-y-2 mt-3">
           {navItems.map((item) => {
             const Icon = item.icon;

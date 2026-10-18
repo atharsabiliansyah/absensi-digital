@@ -11,7 +11,6 @@ class LaporanController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Menggunakan $request->filled agar jika input bernilai string kosong (""), otomatis menggunakan default bulan/tahun berjalan
         $bulan = $request->filled('bulan') ? (int)$request->input('bulan') : (int)date('m');
         $tahun = $request->filled('tahun') ? (int)$request->input('tahun') : (int)date('Y');
 
@@ -19,26 +18,22 @@ class LaporanController extends Controller
         $kelasId = trim((string) $request->input('kelas_id', 'Semua'));
         $status  = trim((string) $request->input('status', 'Semua'));
 
-        // 2. Gunakan whereMonth & whereYear bawaan Eloquent agar pencarian tanggal lebih presisi
         $query = Presensi::with(['siswa.kelas'])
             ->whereMonth('tanggal', $bulan)
             ->whereYear('tanggal', $tahun);
 
-        // Filter Jurusan (Abaikan jika "Semua", "Semua Jurusan", atau kosong)
         if ($request->filled('jurusan') && !str_contains(strtolower($jurusan), 'semua')) {
             $query->whereHas('siswa.kelas', function ($q) use ($jurusan) {
                 $q->where('jurusan', $jurusan);
             });
         }
 
-        // Filter Kelas (Abaikan jika "Semua", "Semua Kelas", atau kosong)
         if ($request->filled('kelas_id') && !str_contains(strtolower($kelasId), 'semua')) {
             $query->whereHas('siswa', function ($q) use ($kelasId) {
                 $q->where('kelas_id', $kelasId);
             });
         }
 
-        // 3. Hitung Rekapitulasi Ringkasan Statistik sebelum filter status diterapkan
         $summaryQuery = clone $query;
         $summary = [
             'hadir'       => (clone $summaryQuery)->where('status', 'Hadir')->count(),
@@ -48,7 +43,6 @@ class LaporanController extends Controller
             'tidak_hadir' => (clone $summaryQuery)->whereIn('status', ['Alpa', 'Alpha', 'Tidak Hadir'])->count(),
         ];
 
-        // 4. Filter Status (Hanya untuk tabel data)
         if ($request->filled('status') && !str_contains(strtolower($status), 'semua')) {
             $query->where('status', $status);
         }
@@ -64,7 +58,7 @@ class LaporanController extends Controller
 
         return Inertia::render('Laporan/index', [
             'presensis' => $presensis,
-            'presensi'  => $presensis, // Kompatibilitas jika frontend membaca prop 'presensi'
+            'presensi'  => $presensis,
             'summary'   => $summary,
             'kelases'   => $kelases,
             'jurusans'  => $jurusans,
@@ -122,7 +116,7 @@ class LaporanController extends Controller
 
         $callback = function() use ($presensis) {
             $file = fopen('php://output', 'w');
-            fputs($file, "\xEF\xBB\xBF"); // UTF-8 BOM agar rapi di MS Excel
+            fputs($file, "\xEF\xBB\xBF"); 
             fputcsv($file, ['NO', 'TANGGAL', 'NIS', 'NAMA SISWA', 'KELAS', 'JURUSAN', 'STATUS', 'WAKTU']);
 
             foreach ($presensis as $idx => $row) {

@@ -30,12 +30,10 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
   onViewAllClick,
   onSelectRecord,
 }) => {
-  // Menampilkan hingga 5 presensi terbaru
   const displayRecords = records.slice(0, 5);
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-[24px] p-5 sm:p-8 shadow-xs border border-slate-100/90 flex flex-col justify-start">
-      {/* Card Header */}
       <div className="flex items-center justify-between pb-2 sm:pb-3">
         <div>
           <h2 className="text-[17px] sm:text-[22px] font-bold text-slate-800 leading-snug">
@@ -55,7 +53,6 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
         )}
       </div>
 
-      {/* Attendance Table */}
       <div className="w-full overflow-x-auto mt-2 sm:mt-4 pb-2 scrollbar-thin">
         <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-full">
           <thead>
@@ -96,12 +93,10 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
                     className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
                     title={`Detail presensi ${namaSiswa}`}
                   >
-                    {/* WAKTU MASUK */}
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14px] text-slate-700 font-mono tracking-tight whitespace-nowrap font-semibold">
                       {jamMasuk}
                     </td>
 
-                    {/* WAKTU PULANG */}
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14px] font-mono tracking-tight whitespace-nowrap">
                       {jamPulang ? (
                         <span className="text-blue-600 font-bold">{jamPulang}</span>
@@ -110,22 +105,18 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
                       )}
                     </td>
 
-                    {/* NAMA SISWA */}
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13.5px] sm:text-[15px] font-bold text-slate-900 whitespace-nowrap group-hover:text-blue-600 transition-colors">
                       {namaSiswa}
                     </td>
 
-                    {/* KELAS */}
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14.5px] text-slate-600 font-medium whitespace-nowrap">
                       {kelasSiswa}
                     </td>
 
-                    {/* JURUSAN */}
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14.5px] text-slate-600 font-medium whitespace-nowrap">
                       {jurusanSiswa}
                     </td>
 
-                    {/* STATUS BADGE */}
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-right pr-4 sm:pr-6 whitespace-nowrap">
                       {isLate ? (
                         <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#fef3c7] text-[#d97706] tracking-tight">

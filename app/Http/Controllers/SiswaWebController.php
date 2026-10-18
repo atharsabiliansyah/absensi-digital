@@ -10,9 +10,6 @@ use Inertia\Inertia;
 
 class SiswaWebController extends Controller
 {
-    /**
-     * Menampilkan halaman utama Data Siswa via Inertia.js
-     */
     public function index()
     {
             return Inertia::render('DataSiswa');        

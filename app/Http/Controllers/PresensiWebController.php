@@ -9,9 +9,7 @@ use Inertia\Inertia;
 
 class PresensiWebController extends Controller
 {
-    /**
-     * Menampilkan halaman utama Presensi Harian via Inertia.js
-     */
+    
     public function index()
     {
         return Inertia::render('Presensi');

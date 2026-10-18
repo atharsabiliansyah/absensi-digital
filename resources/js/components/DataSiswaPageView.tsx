@@ -16,21 +16,17 @@ export const DataSiswaPageView: React.FC = () => {
   const [siswaList, setSiswaList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Filter & Search State
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedJurusan, setSelectedJurusan] = useState<string>('Semua Jurusan');
   const [selectedStatus, setSelectedStatus] = useState<string>('Semua Status');
 
-  // State Paginasi (5 Data per Halaman)
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
 
-  // Modals & Form State
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deletingItem, setDeletingItem] = useState<any | null>(null);
 
-  // Form Input
   const [formNis, setFormNis] = useState<string>('');
   const [formNama, setFormNama] = useState<string>('');
   const [formKelas, setFormKelas] = useState<string>('X');
@@ -39,7 +35,6 @@ export const DataSiswaPageView: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'Aktif' | 'Nonaktif'>('Aktif');
   const [isReadingRfid, setIsReadingRfid] = useState<boolean>(false);
 
-  // Toast Notification
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const triggerToast = (msg: string) => {
     setToastMsg(msg);
@@ -52,7 +47,6 @@ export const DataSiswaPageView: React.FC = () => {
     return clean.match(/.{1,2}/g)?.join(' : ') || uid;
   };
 
-  // 1. Fetch Data Siswa
   const fetchSiswa = async () => {
     setLoading(true);
     try {
@@ -265,7 +259,7 @@ export const DataSiswaPageView: React.FC = () => {
               className="w-full sm:w-auto bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 py-2.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer hover:shadow-md shrink-0"
             >
               <Plus className="w-4 h-4 stroke-[2.5] shrink-0" />
-              <span className="whitespace-nowrap">Daftarkan RFID Baru</span>
+              <span className="whitespace-nowrap">Daftarkan RFID </span>
             </button>
           </div>
         </div>
@@ -400,7 +394,6 @@ export const DataSiswaPageView: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL: TAMBAH & EDIT DATA SISWA */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-5 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto">
           <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[88vh] sm:max-h-[90vh] shadow-2xl border border-slate-100 flex flex-col overflow-hidden my-auto animate-in zoom-in-95 duration-200">
@@ -569,7 +562,6 @@ export const DataSiswaPageView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: DELETE CONFIRMATION */}
       {deletingItem && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center">

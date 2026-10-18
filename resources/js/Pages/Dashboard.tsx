@@ -17,7 +17,6 @@ import { RecentAttendanceTable } from '../components/RecentAttendanceTable';
 import { StudentDetailModal } from '../components/StudentDetailModal';
 import { MobileDashboardView } from '../components/MobileDashboardView';
 
-// Helper format data presensi
 const formatRecord = (item: any) => {
   const studentName = item.siswa?.nama_siswa || item.namaSiswa || item.nama || item.nama_siswa || '-';
   return {
@@ -34,16 +33,13 @@ const formatRecord = (item: any) => {
 };
 
 export default function Dashboard() {
-  // 1. Ambil data dari Backend Laravel
   const { auth, presensi = [], stats: backendStats } = usePage<any>().props;
 
-  // Hitung persentase untuk StatCard
   const totalAwal = backendStats?.total_siswa || 1;
   const hadirPercentNum = Math.round(((backendStats?.hadir || 0) / totalAwal) * 100);
   const terlambatPercentNum = Math.round(((backendStats?.terlambat || 0) / totalAwal) * 100);
   const tidakHadirPercentNum = Math.round(((backendStats?.tidak_hadir || 0) / totalAwal) * 100);
 
-  // 2. State dinamis terformat
   const [records, setRecords] = useState<any[]>(() => presensi.map(formatRecord));
   const [stats, setStats] = useState({
     hadir: backendStats?.hadir || 0,
@@ -56,7 +52,6 @@ export default function Dashboard() {
     totalPercent: 100,
   });
 
-  // Time & Date format
   const getFormattedTime = () => {
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
@@ -80,11 +75,9 @@ export default function Dashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // Modals & Popups
   const [selectedStudentDetail, setSelectedStudentDetail] = useState<any | null>(null);
   const [attendanceNotif, setAttendanceNotif] = useState<{ nama: string; waktu: string } | null>(null);
 
-  // 3. Polling Real-time: Cek data baru ke Laravel setiap 2.5 detik
   useEffect(() => {
     const fetchLatestData = async () => {
       try {
@@ -92,7 +85,6 @@ export default function Dashboard() {
         if (response.ok) {
           const data = await response.json();
 
-          // Notifikasi jika ada data tap baru
           if (data.presensi && data.presensi.length > records.length) {
             const newest = data.presensi[0];
             if (newest) {
@@ -128,7 +120,6 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [records.length]);
 
-  // Auto-hide notification
   useEffect(() => {
     if (attendanceNotif) {
       const timer = setTimeout(() => {
@@ -142,7 +133,6 @@ export default function Dashboard() {
     <AuthenticatedLayout>
       <Head title="Dashboard - Presensi Digital - SMK PGRI 11 CILEDUG" />
 
-      {/* MOBILE DASHBOARD VIEW */}
       <div className="block md:hidden">
         <MobileDashboardView
           onSelectRecord={(rec) => setSelectedStudentDetail(rec)}
@@ -153,7 +143,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* DESKTOP DASHBOARD VIEW */}
       <div className="hidden md:block space-y-7">
         <div className="mb-7 text-left">
           <h1 className="text-2xl font-bold text-slate-800">
@@ -162,7 +151,7 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
-          {/* Tabel Presensi Terbaru */}
+
           <div className="lg:col-span-8 flex flex-col">
             <RecentAttendanceTable
               records={records}
@@ -171,7 +160,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Ringkasan Kartu Statistik */}
           <div className="lg:col-span-4 flex flex-col gap-5">
             <StatCard
               label="Hadir"
@@ -219,13 +207,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Modal Detail Siswa */}
       <StudentDetailModal
         record={selectedStudentDetail}
         onClose={() => setSelectedStudentDetail(null)}
       />
 
-      {/* Real-time Presensi Toast Notification */}
       {attendanceNotif && (
         <div className="fixed bottom-6 left-6 z-50 max-w-sm w-full bg-white rounded-2xl shadow-2xl border-l-4 border-l-emerald-500 border border-slate-100 p-4 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300">
           <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">

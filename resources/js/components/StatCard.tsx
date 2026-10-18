@@ -29,14 +29,12 @@ export const StatCard: React.FC<StatCardProps> = ({
         onClick ? 'cursor-pointer hover:border-slate-200 hover:shadow-sm' : ''
       }`}
     >
-      {/* Left Icon in Colored Circle */}
       <div
         className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shrink-0 ${bgColor} ${iconColor}`}
       >
         <Icon className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
       </div>
 
-      {/* Right Stats Text */}
       <div className="flex flex-col justify-center">
         <span className="text-[12.5px] sm:text-[14.5px] text-slate-400 font-medium leading-none">
           {label}

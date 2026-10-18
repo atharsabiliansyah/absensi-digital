@@ -283,7 +283,7 @@ export const LaporanPageView: React.FC<Props> = ({
                         ) : (
                             <tr>
                                 <td colSpan={8} className="text-center py-10 text-slate-400 font-medium">
-                                    Tidak ada data presensi pada periode ini.
+                                    Tidak ada data presensi pada periode ini
                                 </td>
                             </tr>
                         )}
@@ -301,7 +301,7 @@ export const LaporanPageView: React.FC<Props> = ({
                     <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6zm10.5-8l-2.1 3.5 2.1 3.5h-1.8l-1.2-2.2-1.2 2.2h-1.8l2.1-3.5-2.1-3.5h1.8l1.2 2.2 1.2-2.2h1.8z"/>
                     </svg>
-                    Export ke Excel
+                    Export Excel
                 </button>
             </div>
         </div>
