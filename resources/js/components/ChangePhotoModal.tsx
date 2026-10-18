@@ -118,10 +118,7 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
             <p className="text-xs font-semibold text-slate-700 mt-2.5">
               Foto Profil Baru
             </p>
-            <p className="text-[11px] text-slate-400">
-              Foto akan ditampilkan pada identitas akun
-            </p>
-          </div>
+           </div>
 
           <input
             ref={fileInputRef}
@@ -140,9 +137,6 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
             </div>
             <p className="text-xs font-bold text-slate-800">
               Pilih Foto 
-            </p>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Maks. 5 MB
             </p>
           </div>
 

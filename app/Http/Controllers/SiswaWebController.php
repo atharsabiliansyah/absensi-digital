@@ -12,7 +12,7 @@ class SiswaWebController extends Controller
 {
     public function index()
     {
-            return Inertia::render('DataSiswa');        
+        return Inertia::render('DataSiswa');        
     }
 
     public function getSiswaList(Request $request)
@@ -72,10 +72,22 @@ class SiswaWebController extends Controller
             ], 422);
         }
 
-        $namaKelasLengkap = $request->kelas . ' ' . $request->jurusan;
-        $kelasObj = Kelas::firstOrCreate(
-            ['nama_kelas' => $namaKelasLengkap, 'jurusan' => $request->jurusan]
-        );
+        $tingkat = trim((string) $request->kelas);   
+        $jurusan = trim((string) $request->jurusan); 
+
+        $kelasObj = Kelas::where('jurusan', $jurusan)
+            ->where(function ($q) use ($tingkat, $jurusan) {
+                $q->where('nama_kelas', $tingkat)
+                  ->orWhere('nama_kelas', $tingkat . ' ' . $jurusan);
+            })
+            ->first();
+
+        if (!$kelasObj) {
+            $kelasObj = Kelas::create([
+                'nama_kelas' => $tingkat,
+                'jurusan'    => $jurusan,
+            ]);
+        }
 
         $siswa = Siswa::create([
             'nisn' => $request->nisn,
@@ -106,10 +118,29 @@ class SiswaWebController extends Controller
 
         $cleanUid = strtoupper(str_replace([':', ' '], '', $request->rfid_uid));
 
-        $namaKelasLengkap = $request->kelas . ' ' . $request->jurusan;
-        $kelasObj = Kelas::firstOrCreate(
-            ['nama_kelas' => $namaKelasLengkap, 'jurusan' => $request->jurusan]
-        );
+        if (Siswa::where('rfid_uid', $cleanUid)->where('id', '!=', $id)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kartu RFID ini sudah terdaftar atas nama siswa lain!'
+            ], 422);
+        }
+
+        $tingkat = trim((string) $request->kelas);
+        $jurusan = trim((string) $request->jurusan);
+
+        $kelasObj = Kelas::where('jurusan', $jurusan)
+            ->where(function ($q) use ($tingkat, $jurusan) {
+                $q->where('nama_kelas', $tingkat)
+                  ->orWhere('nama_kelas', $tingkat . ' ' . $jurusan);
+            })
+            ->first();
+
+        if (!$kelasObj) {
+            $kelasObj = Kelas::create([
+                'nama_kelas' => $tingkat,
+                'jurusan'    => $jurusan,
+            ]);
+        }
 
         $siswa->update([
             'nisn' => $request->nisn,
