@@ -1,435 +1,245 @@
 import React, { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import {
   Bell,
   Calendar,
   GraduationCap,
-  ChevronRight,
   ChevronDown,
-  Wifi,
   User,
   Clock,
-  UserX,
-  Users,
-  Check,
-  ArrowLeft,
-  Radio,
   FileText,
   X,
+  Check,
 } from 'lucide-react';
 import { PgriLogo } from './PgriLogo';
-import { AttendanceRecord } from '../data/mockData';
 import { NavTab } from './Sidebar';
 import { NotificationModal } from './NotificationModal';
 import { UserProfileModal } from './UserProfileModal';
 import { useProfilePhoto } from '../utils/profilePhotoState';
 
+interface AttendanceItem {
+  id?: string;
+  nama: string;
+  kelas?: string;
+  jurusan?: string;
+  waktu: string;
+  status: 'Hadir' | 'Terlambat' | 'Izin' | 'Sakit' | 'Tidak Hadir' | string;
+}
+
+interface StatsData {
+  hadir: number;
+  terlambat: number;
+  izin?: number;
+  sakit?: number;
+  tidakHadir: number;
+}
+
+interface UserAuth {
+  id?: number;
+  name?: string;
+  username?: string;
+  email?: string;
+  nip?: string;
+  role?: string;
+}
+
 interface MobileDashboardViewProps {
+  user?: UserAuth;
   onViewAllClick?: () => void;
-  onSelectRecord?: (record: AttendanceRecord) => void;
+  onSelectRecord?: (record: any) => void;
   onNavigate?: (tab: NavTab) => void;
   onLogoutClick?: () => void;
-  currentTime: string;
-  currentDate: string;
+  currentTime?: string;
+  currentDate?: string;
+  recentAttendance?: AttendanceItem[];
+  stats?: StatsData;
+  userName?: string;
 }
 
 export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
+  user: propUser,
   onSelectRecord,
   onNavigate,
   onLogoutClick,
-  currentTime,
-  currentDate,
+  currentTime = '08:10:51',
+  currentDate = 'Selasa, 20 Okt 2026',
+  recentAttendance = [], 
+  stats = { hadir: 0, terlambat: 0, izin: 0, sakit: 0, tidakHadir: 0 },
+  userName: propUserName,
 }) => {
+  // Ambil data user aktif secara dinamis dari props atau Inertia global pageProps
+  const pageProps = usePage().props as any;
+  const activeUser: UserAuth | undefined = propUser || pageProps.auth?.user || pageProps.user;
+
+  // Nama & NIP Dinamis
+  const displayName = activeUser?.name || propUserName || 'Pengguna';
+  const displayNip = activeUser?.nip ? `NIP. ${activeUser.nip}` : '-';
+
   const { photo: teacherPhoto } = useProfilePhoto();
   const [showAllStudents, setShowAllStudents] = useState<boolean>(false);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
 
-  
-  const previewAttendance = [
-    {
-      initials: 'IS',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Isa',
-      kelas: 'XI', 
-      jurusan: 'TKJ',
-      status: 'Hadir',
-      statusBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      waktu: '07:34:12 WIB',
-    },
-    {
-      initials: 'BA',
-      initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      nama: 'Bador',
-      kelas: 'X ',
-      jurusan: 'AKL',
-      status: 'Terlambat',
-      statusBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      waktu: '07:32:45 WIB',
-    },
-    {
-      initials: 'CI',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Citra',
-      kelas: 'XI ',
-      jurusan: 'OTPK',
-      status: 'Hadir',
-      statusBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      waktu: '07:28:01 WIB',
-    },
-    {
-      initials: 'DI',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Dimas',
-      kelas: 'X ',
-      jurusan: 'BDP',
-      status: 'Hadir',
-      statusBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      waktu: '07:21:17 WIB',
-    },
-    {
-      initials: 'AN',
-      initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      nama: 'Andi',
-      kelas: 'XI ',
-      jurusan: 'TKJ',
-      status: 'Terlambat',
-      statusBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      waktu: '07:18:33 WIB',
-    },
-  ];
-
-  
-  const fullAttendance = [
-    {
-      initials: 'IS',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Isa',
-      kelas: 'XI TKJ',
-      jurusan: 'TKJ',
-      status: 'Hadir',
-      waktu: '07:34:12 WIB',
-    },
-    {
-      initials: 'BA',
-      initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      nama: 'Bador',
-      kelas: 'X AKL',
-      jurusan: 'AKL',
-      status: 'Terlambat',
-      waktu: '07:32:45 WIB',
-    },
-    {
-      initials: 'CI',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Citra',
-      kelas: 'XI OTPK',
-      jurusan: 'OTPK',
-      status: 'Hadir',
-      waktu: '07:28:01 WIB',
-    },
-    {
-      initials: 'DI',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Dimas',
-      kelas: 'X BDP',
-      jurusan: 'BDP',
-      status: 'Hadir',
-      waktu: '07:21:17 WIB',
-    },
-    {
-      initials: 'AN',
-      initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      nama: 'Andi',
-      kelas: 'XI TKJ',
-      jurusan: 'TKJ',
-      status: 'Terlambat',
-      waktu: '07:18:33 WIB',
-    },
-    {
-      initials: 'IS',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Isa',
-      kelas: 'XI TKJ',
-      jurusan: 'TKJ',
-      status: 'Hadir',
-      waktu: '07:34:12 WIB',
-    },
-    {
-      initials: 'BA',
-      initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      nama: 'Bador',
-      kelas: 'X AKL',
-      jurusan: 'AKL',
-      status: 'Terlambat',
-      waktu: '07:32:45 WIB',
-    },
-    {
-      initials: 'CI',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Citra',
-      kelas: 'XI OTPK',
-      jurusan: 'OTPK',
-      status: 'Hadir',
-      waktu: '07:28:01 WIB',
-    },
-    {
-      initials: 'DI',
-      initialBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-      nama: 'Dimas',
-      kelas: 'X BDP',
-      jurusan: 'BDP',
-      status: 'Hadir',
-      waktu: '07:21:17 WIB',
-    },
-    {
-      initials: 'AN',
-      initialBg: 'bg-amber-50 text-amber-600 border-amber-200',
-      nama: 'Andi',
-      kelas: 'XI TKJ',
-      jurusan: 'TKJ',
-      status: 'Terlambat',
-      waktu: '07:18:33 WIB',
-    },
-  ];
+  const displayAttendance = showAllStudents
+    ? recentAttendance
+    : recentAttendance.slice(0, 5);
 
   return (
-    <div className="md:hidden pb-20 space-y-4 px-1 animate-in fade-in duration-200">
-
-      <div className="flex items-center justify-between py-2">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-xs shrink-0 p-0.5 border border-slate-100 overflow-hidden">
-            <PgriLogo size={34} />
-          </div>
-          <div className="leading-tight">
-            <h1 className="text-[13.5px] font-bold text-slate-900 tracking-tight">
-              SMK PGRI 11 CILEDUG
-            </h1>
-            <p className="text-[10.5px] text-slate-500 font-medium">
-              Sistem Presensi RFID &amp; IoT
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsNotifOpen(true)}
-            style={{ width: '36px', height: '36px' }}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 relative transition-colors cursor-pointer"
-            aria-label="Buka Notifikasi Sistem"
-          >
-            <Bell className="w-4 h-4 text-slate-600" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsProfileModalOpen(true)}
-            style={{ width: '36px', height: '36px' }}
-            className="relative w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] shrink-0 rounded-full ring-2 ring-blue-500/20 hover:ring-blue-500/40 transition-all cursor-pointer p-0.5 bg-white shadow-2xs overflow-hidden"
-            aria-label="Buka Profil Guru"
-          >
-            <img
-              src={teacherPhoto}
-              alt="Foto Profil Bapak/Ibu Guru"
-              width={34}
-              height={34}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              className="w-full h-full object-cover rounded-full block"
-            />
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-[#0c3260] via-[#104a8e] to-[#1e60d5] text-white rounded-[24px] p-5 relative overflow-hidden shadow-md">
-
-        <div className="absolute -right-4 -top-4 w-40 h-40 pointer-events-none opacity-15">
-          <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" className="w-full h-full text-white">
-            <circle cx="90" cy="10" r="20" strokeWidth="2.5" />
-            <circle cx="90" cy="10" r="38" strokeWidth="2.5" />
-            <circle cx="90" cy="10" r="56" strokeWidth="2.5" />
-            <circle cx="90" cy="10" r="74" strokeWidth="2.5" />
-          </svg>
-        </div>
-
+    <div className="w-full max-w-full pb-20 space-y-4 px-3 sm:px-4 animate-in fade-in duration-200 box-border">
+      <div className="bg-gradient-to-br from-[#0c3260] via-[#104a8e] to-[#1e60d5] text-white rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-md">
         <div className="flex items-center justify-between text-xs relative z-10">
-          <div className="bg-black/25 backdrop-blur-xs text-white px-3 py-1 rounded-full text-[11px] font-mono font-medium flex items-center gap-2 border border-white/10">
-            <span>{currentTime || '07:35:21'} WIB</span>
+          <div className="bg-black/25 backdrop-blur-xs text-white px-2.5 py-1 rounded-full text-[10.5px] font-mono font-medium flex items-center gap-1.5 border border-white/10">
+            <span>{currentTime} WIB</span>
           </div>
 
           <div className="flex items-center gap-1.5 text-white/90 text-[11px] font-medium">
             <Calendar className="w-3.5 h-3.5 text-white/80" />
-            <span>{currentDate || 'Senin, 25 Sep 2026'}</span>
+            <span>{currentDate}</span>
           </div>
         </div>
 
-        <div className="mt-4 relative z-10">
-          <h2 className="text-[17px] font-bold text-white tracking-tight leading-snug">
-            Selamat Datang,  Untung Sudarto
+        <div className="mt-3 relative z-10">
+          <h2 className="text-[16px] font-bold text-white tracking-tight leading-snug">
+            Selamat Datang, {displayName}
           </h2>
-          <p className="text-[12px] text-white/80 font-medium mt-0.5">
-            NIP. 198705123456
+          <p className="text-[11.5px] text-white/80 font-medium mt-0.5">
+            {displayNip}
           </p>
         </div>
 
-        <div className="mt-3.5 relative z-10">
-          <div className="bg-white text-[#1e3a8a] px-3.5 py-1.5 rounded-full text-[11.5px] font-bold inline-flex items-center gap-1.5 shadow-xs">
-            <GraduationCap className="w-4 h-4 text-[#1e3a8a] shrink-0" />
-            <span>Wali Kelas XII TKJ 1 • Produktif TKJ</span>
-          </div>
-        </div>
+        <div className="mt-3 relative z-10">
+      </div>
       </div>
 
-      <div
-        style={{ padding: '16px 16px 18px 16px' }}
-        className="bg-white rounded-[22px] p-4 sm:p-5 shadow-xs border border-slate-100"
-      >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100/60">
+      <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 w-full">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <h3 className="text-[12px] font-bold text-slate-800 tracking-wider uppercase font-sans">
             PRESENSI TERBARU
           </h3>
 
-          <button
-            type="button"
-            onClick={() => setShowAllStudents(!showAllStudents)}
-            className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer transition-colors"
-          >
-            <span>{showAllStudents ? 'Tampilkan Ringkas' : 'Lihat Semua'}</span>
-            <ChevronDown
-              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                showAllStudents ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
+          {recentAttendance.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAllStudents(!showAllStudents)}
+              className="text-[11.5px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+            >
+              <span>{showAllStudents ? 'Ringkas' : 'Lihat Semua'}</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  showAllStudents ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+          )}
         </div>
 
-        <div
-          className={`divide-y divide-slate-100/80 transition-all duration-300 pt-0.5 ${
-            showAllStudents
-              ? 'max-h-[480px] overflow-y-auto pr-1 scrollbar-thin'
-              : ''
-          }`}
-        >
-          {(showAllStudents ? fullAttendance : previewAttendance).map((item, idx) => {
-            const isHadir = item.status === 'Hadir';
+        <div className="divide-y divide-slate-100 pt-1">
+          {displayAttendance.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-[12.5px] font-medium">
+              Belum ada presensi hari ini
+            </div>
+          ) : (
+            displayAttendance.map((item, idx) => {
+              const isHadir = item.status === 'Hadir';
 
-            return (
-              <div
-                key={idx}
-                onClick={() =>
-                  onSelectRecord?.({
-                    id: String(idx + 1),
-                    nama: item.nama,
-                    nisn: '00123' + idx,
-                    rfidUid: 'A8-3F-90-C' + idx,
-                    kelas: item.kelas,
-                    jurusan: item.jurusan,
-                    waktu: item.waktu.replace(' WIB', ''),
-                    status: item.status as 'Hadir' | 'Terlambat',
-                    tanggal: '25 Sep 2026',
-                  })
-                }
-                className="py-3 px-1.5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 rounded-xl transition-colors"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    style={{ width: '36px', height: '36px' }}
-                    className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] rounded-full flex items-center justify-center font-bold text-[12px] border shrink-0 ${item.initialBg}`}
-                  >
-                    {item.initials}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[13.5px] font-bold text-slate-900 leading-snug truncate">
-                      {item.nama}
+              return (
+                <div
+                  key={idx}
+                  onClick={() => onSelectRecord?.(item)}
+                  className="py-2.5 px-1 flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded-lg transition-colors gap-2"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[11px] border border-blue-100 shrink-0">
+                      {item.nama.substring(0, 2).toUpperCase()}
                     </div>
-                    <div className="text-[11px] text-slate-400 font-medium truncate">
-                      {item.kelas} • {item.jurusan}
+                    <div className="min-w-0">
+                      <div className="text-[12.5px] font-bold text-slate-900 leading-tight truncate">
+                        {item.nama}
+                      </div>
+                      <div className="text-[10.5px] text-slate-400 font-medium truncate">
+                        {item.kelas} {item.jurusan}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="text-right flex flex-col items-end shrink-0 pl-2">
-                  <span
-                    className={`px-3 py-0.5 rounded-full text-[11px] font-semibold border flex items-center gap-1 ${
-                      isHadir
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200/80'
-                        : 'bg-amber-50 text-amber-600 border-amber-200/80'
-                    }`}
-                  >
-                    {isHadir ? (
-                      <Check className="w-3 h-3 stroke-[2.5]" />
-                    ) : (
-                      <Clock className="w-3 h-3 stroke-[2.2]" />
-                    )}
-                    <span>{item.status}</span>
-                  </span>
-                  <span className="text-[11px] text-slate-400 mt-1 font-mono">
-                    {item.waktu}
-                  </span>
+                  <div className="text-right flex flex-col items-end shrink-0">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border flex items-center gap-1 ${
+                        isHadir
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                          : 'bg-amber-50 text-amber-600 border-amber-200'
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                      {item.waktu}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-
-        <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
-            <Check className="w-6 h-6 stroke-[3]" />
+      <div className="grid grid-cols-2 gap-2.5 w-full">
+        <div className="bg-white rounded-xl p-3.5 shadow-xs border border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
+            <Check className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <div className="text-[12.5px] text-slate-400 font-medium">Hadir</div>
-            <div className="text-[22px] font-bold text-slate-900 leading-tight">
-              1.250
+            <div className="text-[11px] text-slate-400 font-medium">Hadir</div>
+            <div className="text-[18px] font-bold text-slate-900 leading-tight">
+              {stats.hadir}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-[#fef3c7] flex items-center justify-center text-[#f59e0b] shrink-0">
-            <Clock className="w-6 h-6 stroke-[2.5]" />
+        <div className="bg-white rounded-xl p-3.5 shadow-xs border border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
+            <Clock className="w-5 h-5 stroke-[2.2]" />
           </div>
           <div>
-            <div className="text-[12.5px] text-slate-400 font-medium">Terlambat</div>
-            <div className="text-[22px] font-bold text-slate-900 leading-tight">
-              120
+            <div className="text-[11px] text-slate-400 font-medium">Terlambat</div>
+            <div className="text-[18px] font-bold text-slate-900 leading-tight">
+              {stats.terlambat}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
-            <FileText className="w-5 h-5 stroke-[2.2]" />
+        <div className="bg-white rounded-xl p-3.5 shadow-xs border border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 shrink-0">
+            <FileText className="w-4 h-4 stroke-[2.2]" />
           </div>
           <div>
-            <div className="text-[12.5px] text-slate-400 font-medium">Izin</div>
-            <div className="text-[22px] font-bold text-slate-900 leading-tight">
-              35
+            <div className="text-[11px] text-slate-400 font-medium">Izin</div>
+            <div className="text-[18px] font-bold text-slate-900 leading-tight">
+              {stats.izin || 0}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-[#f3e8ff] flex items-center justify-center text-[#9333ea] shrink-0">
-            <User className="w-5 h-5 stroke-[2.2]" />
+        <div className="bg-white rounded-xl p-3.5 shadow-xs border border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 shrink-0">
+            <User className="w-4 h-4 stroke-[2.2]" />
           </div>
           <div>
-            <div className="text-[12.5px] text-slate-400 font-medium">Sakit</div>
-            <div className="text-[22px] font-bold text-slate-900 leading-tight">
-              28
+            <div className="text-[11px] text-slate-400 font-medium">Sakit</div>
+            <div className="text-[18px] font-bold text-slate-900 leading-tight">
+              {stats.sakit || 0}
             </div>
           </div>
         </div>
 
-        <div className="col-span-2 bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-full bg-[#fee2e2] flex items-center justify-center text-[#ef4444] shrink-0">
-            <X className="w-6 h-6 stroke-[3]" />
+        <div className="col-span-2 bg-white rounded-xl p-3.5 shadow-xs border border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 shrink-0">
+            <X className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <div className="text-[12.5px] text-slate-400 font-medium">Tidak Hadir</div>
-            <div className="text-[22px] font-bold text-slate-900 leading-tight">
-              67
+            <div className="text-[11px] text-slate-400 font-medium">Tidak Hadir</div>
+            <div className="text-[18px] font-bold text-slate-900 leading-tight">
+              {stats.tidakHadir}
             </div>
           </div>
         </div>
@@ -445,6 +255,7 @@ export const MobileDashboardView: React.FC<MobileDashboardViewProps> = ({
       />
 
       <UserProfileModal
+        user={activeUser}
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         onNavigateToSettings={() => {

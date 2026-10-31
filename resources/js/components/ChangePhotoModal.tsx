@@ -76,15 +76,13 @@ export const ChangePhotoModal: React.FC<ChangePhotoModalProps> = ({
       >
         <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1d6ee5] flex items-center justify-center shrink-0">
-              <Camera className="w-5 h-5" />
-            </div>
+            
             <div>
               <h3 className="text-[15px] font-bold text-slate-900 leading-tight">
                 Ganti Foto Profil
               </h3>
               <p className="text-[11.5px] text-slate-400 mt-0.5">
-                Unggah foto profil baru dari galeri perangkat
+                Unggah foto profil baru dari galeri 
               </p>
             </div>
           </div>

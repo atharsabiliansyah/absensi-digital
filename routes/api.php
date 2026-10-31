@@ -10,3 +10,6 @@ Route::get('/user', function (Request $request) {
 
 // Route untuk menerima kiriman data tap dari ESP8266
 Route::post('/presensi', [PresensiController::class, 'store']);
+Route::get('/presensi-list', [PresensiController::class, 'getPresensiList']);
+Route::patch('/presensi/{id}/status', [PresensiController::class, 'updateStatus']);
+Route::post('/presensi/scan', [PresensiController::class, 'scanHandler']);

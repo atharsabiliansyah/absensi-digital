@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import React, { useState, useEffect } from "react";
+import { router } from "@inertiajs/react";
 
 interface Siswa {
     id: number;
@@ -9,6 +9,7 @@ interface Siswa {
         id: number;
         nama_kelas: string;
         jurusan?: string;
+        tipe_kelas?: number | string;
     };
 }
 
@@ -16,15 +17,9 @@ interface PresensiItem {
     id: number;
     tanggal: string;
     waktu: string | null;
-    waktu_pulang: string | null;
+    waktu_pulang?: string | null;
     status: string;
     siswa?: Siswa;
-}
-
-interface KelasItem {
-    id: number;
-    nama_kelas: string;
-    jurusan?: string;
 }
 
 interface Summary {
@@ -40,59 +35,88 @@ interface Filters {
     tahun?: string;
     jurusan?: string;
     kelas_id?: string;
+    tipe_kelas?: string;
     status?: string;
 }
 
-interface Props {
-    presensis?: PresensiItem[];
-    summary?: Summary;
-    kelases?: KelasItem[];
-    jurusans?: string[];
-    filters?: Filters;
+interface LaporanPageViewProps {
+    presensis: PresensiItem[];
+    summary: Summary;
+    kelases: string[];
+    jurusans: string[];
+    tipeKelases: (string | number)[];
+    filters: Filters;
 }
 
-export const LaporanPageView: React.FC<Props> = ({
+const getBulanSekarang = () =>
+    String(new Date().getMonth() + 1).padStart(2, "0");
+
+const getTahunSekarang = () => String(new Date().getFullYear());
+
+export const LaporanPageView: React.FC<LaporanPageViewProps> = ({
     presensis = [],
-    summary = { hadir: 0, terlambat: 0, izin: 0, sakit: 0, tidak_hadir: 0 },
+    summary = {
+        hadir: 0,
+        terlambat: 0,
+        izin: 0,
+        sakit: 0,
+        tidak_hadir: 0,
+    },
     kelases = [],
     jurusans = [],
-    filters = {}
+    tipeKelases = [],
+    filters = {},
 }) => {
-    const [bulan, setBulan] = useState(filters.bulan || '10');
-    const [tahun, setTahun] = useState(filters.tahun || '2026');
-    const [jurusan, setJurusan] = useState(filters.jurusan || 'Semua');
-    const [kelasId, setKelasId] = useState(filters.kelas_id || 'Semua');
-    const [status, setStatus] = useState(filters.status || 'Semua');
+    const [bulan, setBulan] = useState(filters.bulan || getBulanSekarang());
+    const [tahun, setTahun] = useState(filters.tahun || getTahunSekarang());
+    const [jurusan, setJurusan] = useState(filters.jurusan || "Semua");
+    const [kelasId, setKelasId] = useState(filters.kelas_id || "Semua");
+    const [tipeKelas, setTipeKelas] = useState(filters.tipe_kelas || "Semua");
+    const [status, setStatus] = useState(filters.status || "Semua");
 
     useEffect(() => {
-        if (filters.bulan) setBulan(filters.bulan);
-        if (filters.tahun) setTahun(filters.tahun);
-        if (filters.jurusan) setJurusan(filters.jurusan);
-        if (filters.kelas_id) setKelasId(filters.kelas_id);
-        if (filters.status) setStatus(filters.status);
-    }, [filters]);
+        setBulan(filters.bulan || getBulanSekarang());
+        setTahun(filters.tahun || getTahunSekarang());
+        setJurusan(filters.jurusan || "Semua");
+        setKelasId(filters.kelas_id || "Semua");
+        setTipeKelas(filters.tipe_kelas || "Semua");
+        setStatus(filters.status || "Semua");
+    }, [
+        filters.bulan,
+        filters.tahun,
+        filters.jurusan,
+        filters.kelas_id,
+        filters.tipe_kelas,
+        filters.status,
+    ]);
 
-    const handleFilter = (e: React.FormEvent) => {
+    const handleFilter = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        router.get('/laporan', {
-            bulan,
-            tahun,
-            jurusan,
-            kelas_id: kelasId,
-            status,
-        }, {
-            preserveState: true,
-            replace: true,
-        });
+
+        router.get(
+            "/laporan",
+            {
+                bulan,
+                tahun,
+                jurusan,
+                kelas_id: kelasId,
+                tipe_kelas: tipeKelas,
+                status,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            }
+        );
     };
 
-    // Fungsi Download Langsung / Export ke Excel
     const handleExportExcel = () => {
         const params = new URLSearchParams({
             bulan,
             tahun,
             jurusan,
             kelas_id: kelasId,
+            tipe_kelas: tipeKelas,
             status,
         }).toString();
 
@@ -101,10 +125,9 @@ export const LaporanPageView: React.FC<Props> = ({
 
     return (
         <div className="space-y-6">
-            {/* Box Header Filter */}
+            {/* FILTER LAPORAN */}
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
                 <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-3">
-                    {/* Periode */}
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-700">Periode</label>
                         <div className="flex gap-2">
@@ -132,14 +155,19 @@ export const LaporanPageView: React.FC<Props> = ({
                                 onChange={(e) => setTahun(e.target.value)}
                                 className="w-28 px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                             >
-                                <option value="2025">2025</option>
-                                <option value="2026">2026</option>
-                                <option value="2027">2027</option>
+                                {Array.from({ length: 7 }, (_, index) =>
+                                    new Date().getFullYear() - 3 + index
+                                ).map((year) => (
+                                    <option key={year} value={String(year)}>{year}</option>
+                                ))}
+                                {!Array.from({ length: 7 }, (_, index) =>
+                                    String(new Date().getFullYear() - 3 + index)
+                                ).includes(tahun) && <option value={tahun}>{tahun}</option>}
                             </select>
                         </div>
                     </div>
 
-                    {/* Jurusan */}
+                    {/* FILTER JURUSAN */}
                     <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
                         <label className="text-xs font-bold text-slate-700">Jurusan</label>
                         <select
@@ -148,13 +176,11 @@ export const LaporanPageView: React.FC<Props> = ({
                             className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                         >
                             <option value="Semua">Semua Jurusan</option>
-                            {jurusans.map((j, idx) => (
-                                <option key={idx} value={j}>{j}</option>
-                            ))}
+                            {jurusans.map((item) => <option key={item} value={item}>{item}</option>)}
                         </select>
                     </div>
 
-                    {/* Kelas */}
+                    {/* FILTER KELAS */}
                     <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
                         <label className="text-xs font-bold text-slate-700">Kelas</label>
                         <select
@@ -163,13 +189,26 @@ export const LaporanPageView: React.FC<Props> = ({
                             className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                         >
                             <option value="Semua">Semua Kelas</option>
-                            {kelases.map((k) => (
-                                <option key={k.id} value={k.id}>{k.nama_kelas}</option>
+                            {kelases.map((namaKelas) => <option key={namaKelas} value={namaKelas}>{namaKelas}</option>)}
+                        </select>
+                    </div>
+
+                    {/* FILTER TIPE KELAS */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+                        <label className="text-xs font-bold text-slate-700">Tipe Kelas</label>
+                        <select
+                            value={tipeKelas}
+                            onChange={(e) => setTipeKelas(e.target.value)}
+                            className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                        >
+                            <option value="Semua">Semua Tipe</option>
+                            {tipeKelases.map((tipe) => (
+                                <option key={String(tipe)} value={String(tipe)}>{tipe}</option>
                             ))}
                         </select>
                     </div>
 
-                    {/* Status */}
+                    {/* FILTER STATUS */}
                     <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
                         <label className="text-xs font-bold text-slate-700">Status</label>
                         <select
@@ -182,130 +221,97 @@ export const LaporanPageView: React.FC<Props> = ({
                             <option value="Terlambat">Terlambat</option>
                             <option value="Izin">Izin</option>
                             <option value="Sakit">Sakit</option>
-                            <option value="Alpha">Tidak Hadir</option>
+                            <option value="Tidak Hadir">Tidak Hadir</option>
                         </select>
                     </div>
 
-                    {/* Tombol Tampilkan */}
                     <div>
-                        <button
-                            type="submit"
-                            className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer"
-                        >
+                        <button type="submit" className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer">
                             Tampilkan
                         </button>
                     </div>
                 </form>
             </div>
 
-            {/* Cards Summary */}
+            {/* RINGKASAN PRESENSI */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-               
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                        <i className="fi fi-rr-check text-lg leading-none"></i>
-                    </div>
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Hadir</p>
-                        <p className="text-xl font-extrabold text-slate-800">{summary.hadir}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><i className="fi fi-rr-check text-lg leading-none"></i></div>
+                    <div><p className="text-xs text-slate-400 font-medium">Hadir</p><p className="text-xl font-extrabold text-slate-800">{summary.hadir}</p></div>
                 </div>
-
-               
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
-                        <i className="fi fi-rr-clock text-lg leading-none"></i>
-                    </div>
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Terlambat</p>
-                        <p className="text-xl font-extrabold text-slate-800">{summary.terlambat}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center"><i className="fi fi-rr-clock text-lg leading-none"></i></div>
+                    <div><p className="text-xs text-slate-400 font-medium">Terlambat</p><p className="text-xl font-extrabold text-slate-800">{summary.terlambat}</p></div>
                 </div>
-
-                
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center">
-                        <i className="fi fi-rr-document text-lg leading-none"></i>
-                    </div>
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Izin</p>
-                        <p className="text-xl font-extrabold text-slate-800">{summary.izin}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center"><i className="fi fi-rr-document text-lg leading-none"></i></div>
+                    <div><p className="text-xs text-slate-400 font-medium">Izin</p><p className="text-xl font-extrabold text-slate-800">{summary.izin}</p></div>
                 </div>
-
-              
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
-                        <i className="fi fi-rr-user text-lg leading-none"></i>
-                    </div>
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Sakit</p>
-                        <p className="text-xl font-extrabold text-slate-800">{summary.sakit}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center"><i className="fi fi-rr-user text-lg leading-none"></i></div>
+                    <div><p className="text-xs text-slate-400 font-medium">Sakit</p><p className="text-xl font-extrabold text-slate-800">{summary.sakit}</p></div>
                 </div>
-
-                
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
-                        <i className="fi fi-rr-cross-small text-xl leading-none"></i>
-                    </div>
-                    <div>
-                        <p className="text-xs text-slate-400 font-medium">Tidak Hadir</p>
-                        <p className="text-xl font-extrabold text-slate-800">{summary.tidak_hadir}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center"><i className="fi fi-rr-cross-small text-xl leading-none"></i></div>
+                    <div><p className="text-xs text-slate-400 font-medium">Tidak Hadir</p><p className="text-xl font-extrabold text-slate-800">{summary.tidak_hadir}</p></div>
                 </div>
             </div>
 
-            {/* Tabel Data Presensi */}
+            {/* TABEL LAPORAN */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-100">
-                        <tr>
-                            <th className="p-4">NO</th>
-                            <th className="p-4">TANGGAL</th>
-                            <th className="p-4">NIS</th>
-                            <th className="p-4">NAMA SISWA</th>
-                            <th className="p-4">KELAS</th>
-                            <th className="p-4">JURUSAN</th>
-                            <th className="p-4">STATUS</th>
-                            <th className="p-4">WAKTU</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50 text-slate-700">
-                        {presensis.length > 0 ? (
-                            presensis.map((item, idx) => (
-                                <tr key={item.id} className="hover:bg-slate-50/50 transition">
-                                    <td className="p-4 text-slate-400">{idx + 1}</td>
-                                    <td className="p-4 font-medium">{item.tanggal}</td>
-                                    <td className="p-4 text-slate-500">{item.siswa?.nisn ?? '-'}</td>
-                                    <td className="p-4 font-semibold text-slate-900">{item.siswa?.nama_siswa ?? 'Siswa Tidak Ditemukan'}</td>
-                                    <td className="p-4">{item.siswa?.kelas?.nama_kelas ?? '-'}</td>
-                                    <td className="p-4">{item.siswa?.kelas?.jurusan ?? '-'}</td>
-                                    <td className="p-4">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                            item.status === 'Hadir' ? 'bg-emerald-50 text-emerald-600' :
-                                            item.status === 'Terlambat' ? 'bg-amber-50 text-amber-600' :
-                                            item.status === 'Sakit' ? 'bg-purple-50 text-purple-600' :
-                                            'bg-rose-50 text-rose-600'
-                                        }`}>
-                                            {item.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">{item.waktu ?? '-'}</td>
-                                </tr>
-                            ))
-                        ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-50 text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-100">
                             <tr>
-                                <td colSpan={8} className="text-center py-10 text-slate-400 font-medium">
-                                    Tidak ada data presensi pada periode ini
-                                </td>
+                                <th className="p-4">NO</th>
+                                <th className="p-4">TANGGAL</th>
+                                <th className="p-4">NIS</th>
+                                <th className="p-4">NAMA SISWA</th>
+                                <th className="p-4">KELAS</th>
+                                <th className="p-4">JURUSAN</th>
+                                <th className="p-4">TIPE KELAS</th>
+                                <th className="p-4">STATUS</th>
+                                <th className="p-4">WAKTU</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 text-slate-700">
+                            {presensis.length > 0 ? (
+                                presensis.map((item, idx) => (
+                                    <tr key={item.id} className="hover:bg-slate-50/50 transition">
+                                        <td className="p-4 text-slate-400">{idx + 1}</td>
+                                        <td className="p-4 font-medium">{item.tanggal}</td>
+                                        <td className="p-4 text-slate-500">{item.siswa?.nisn ?? "-"}</td>
+                                        <td className="p-4 font-semibold text-slate-900">{item.siswa?.nama_siswa ?? "Siswa Tidak Ditemukan"}</td>
+                                        <td className="p-4">{item.siswa?.kelas?.nama_kelas ?? "-"}</td>
+                                        <td className="p-4">{item.siswa?.kelas?.jurusan ?? "-"}</td>
+                                        <td className="p-4">{item.siswa?.kelas?.tipe_kelas ?? "-"}</td>
+                                        <td className="p-4">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                item.status === "Hadir" ? "bg-emerald-50 text-emerald-600"
+                                                : item.status === "Terlambat" ? "bg-amber-50 text-amber-600"
+                                                : item.status === "Sakit" ? "bg-purple-50 text-purple-600"
+                                                : item.status === "Izin" ? "bg-sky-50 text-sky-600"
+                                                : "bg-rose-50 text-rose-600"
+                                            }`}>
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">{item.waktu ?? "-"}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={9} className="text-center py-10 text-slate-400 font-medium">
+                                        Tidak ada data presensi pada periode ini
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {/* Tombol Export ke Excel */}
+            {/* TOMBOL EXPORT */}
             <div className="pt-2">
                 <button
                     type="button"
@@ -313,7 +319,7 @@ export const LaporanPageView: React.FC<Props> = ({
                     className="inline-flex items-center gap-2.5 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer"
                 >
                     <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6zm10.5-8l-2.1 3.5 2.1 3.5h-1.8l-1.2-2.2-1.2 2.2h-1.8l2.1-3.5-2.1-3.5h1.8l1.2 2.2 1.2-2.2h1.8z"/>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6zm10.5-8l-2.1 3.5 2.1 3.5h-1.8l-1.2-2.2-1.2 2.2h-1.8l2.1-3.5-2.1-3.5h1.8l1.2 2.2 1.2-2.2h1.8z" />
                     </svg>
                     Export Excel
                 </button>

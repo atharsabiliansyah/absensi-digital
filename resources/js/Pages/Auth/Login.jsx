@@ -33,7 +33,7 @@ export default function Login({ status, canResetPassword }) {
                 backgroundPosition: 'center',
             }}
         >
-            <Head title="Login - Presensi SMK 11 PGRI" />
+            <Head title="Login" />
 
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/20 z-0"></div>
@@ -42,7 +42,7 @@ export default function Login({ status, canResetPassword }) {
             <div className="relative z-10 w-full max-w-[420px] bg-white rounded-[24px] shadow-2xl p-8 text-[#1f2937]">
                 
                 {/* Logo & Header Section */}
-                <div className="text-center mb-6">
+                <div className="text-center mb-2">
                     <div className="w-[120px] h-[100px] mx-auto mb-3 flex items-center justify-center">
                         <img src="/images/logo.pgri.png" alt="Logo" className="w-full h-full object-contain" />
                     </div>

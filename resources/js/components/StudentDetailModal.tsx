@@ -52,7 +52,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ record, 
         <div className="grid grid-cols-2 gap-3 my-4">
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
             <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" /> Waktu Tap RFID
+              Waktu Tap RFID
             </span>
             <p className="text-sm font-bold text-slate-800 font-mono mt-0.5">
               {record.waktu} WIB
@@ -61,7 +61,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ record, 
 
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
             <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <CreditCard className="w-3.5 h-3.5" /> UID Kartu RFID
+               UID Kartu RFID
             </span>
             <p className="text-xs font-bold text-slate-800 font-mono mt-0.5">
               {record.rfidUid}
@@ -70,7 +70,7 @@ export const StudentDetailModal: React.FC<StudentDetailModalProps> = ({ record, 
 
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
             <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <School className="w-3.5 h-3.5" /> NISN
+              NISN
             </span>
             <p className="text-xs font-bold text-slate-800 font-mono mt-0.5">
               {record.nisn}

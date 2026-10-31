@@ -8,6 +8,8 @@ import {
   X,
   CheckCheck,
   ChevronRight,
+  KeyRound,
+  Check,
 } from 'lucide-react';
 
 export interface SystemNotification {
@@ -20,6 +22,15 @@ export interface SystemNotification {
   priority?: 'normal' | 'high';
 }
 
+export interface PendingReset {
+    id: number;
+    user_id?: number;
+    user_name?: string;
+    ip_address?: string;
+    status?: string;
+    created_at?: string;
+}
+
 interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,6 +39,7 @@ interface NotificationModalProps {
     hadir?: number;
     total_siswa?: number;
   };
+  pendingResets?: PendingReset[];
 }
 
 export const NotificationModal: React.FC<NotificationModalProps> = ({
@@ -38,26 +50,39 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 }) => {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  // Deteksi jadwal toleransi harian otomatis
-  const getToleransiHariIni = () => {
-    const day = new Date().getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
-    switch (day) {
-      case 1:
-        return { jam: '07:30 WIB', ket: 'upacara Senin' };
-      case 5:
-        return { jam: '07:05 WIB', ket: 'kegiatan Jumat Berkah' };
-      case 6:
-        return { jam: '08:00 WIB', ket: 'presensi Sabtu' };
-      default:
-        return { jam: '07:15 WIB', ket: 'pembelajaran reguler' };
-    }
+  const JADWAL_HARI: Record<number, { pagi: string; siang: string; ket: string }> = {
+    1: { pagi: '07:30 WIB', siang: '12:40 WIB', ket: 'Senin (Upacara)' },
+    2: { pagi: '07:15 WIB', siang: '12:40 WIB', ket: 'Selasa' },
+    3: { pagi: '07:15 WIB', siang: '12:40 WIB', ket: 'Rabu' },
+    4: { pagi: '07:15 WIB', siang: '12:40 WIB', ket: 'Kamis' },
+    5: { pagi: '07:05 WIB', siang: '12:40 WIB', ket: 'Jumat' },
+    6: { pagi: '08:00 WIB', siang: '12:00 WIB', ket: 'Sabtu' },
+    0: { pagi: '-', siang: '-', ket: 'Hari Libur (Minggu)' },
   };
 
+  const getToleransiHariIni = () => {
+    const now = new Date();
+    const jam = now.getHours();
+    const day = now.getDay();
+    const jadwal = JADWAL_HARI[day] || JADWAL_HARI[2];
+
+    if (day === 0) {
+      return { jam: '-', ket: jadwal.ket };
+    }
+
+    
+    if (jam >= 11) {
+      return { jam: jadwal.siang, ket: `Sesi Siang (${jadwal.ket})` };
+    }
+
+    
+    return { jam: jadwal.pagi, ket: jadwal.ket };
+  };
+  
   const toleransi = getToleransiHariIni();
   const totalHadir = stats.hadir ?? 0;
   const totalSiswa = stats.total_siswa ?? 0;
 
-  // Generate notifikasi dinamis berdasarkan data terkini
   const initialData: SystemNotification[] = [
     {
       id: 'notif-1',
@@ -96,7 +121,6 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
   const [notifications, setNotifications] = useState<SystemNotification[]>(initialData);
 
-  // Perbarui notifikasi ketika props stats berubah
   useEffect(() => {
     setNotifications((prev) =>
       prev.map((item) => {

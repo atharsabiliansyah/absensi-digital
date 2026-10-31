@@ -35,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="pt-9 pb-7 px-6 flex flex-col items-center text-center relative border-b border-white/5">
 
           <div className="w-[82px] h-[82px] rounded-full bg-white flex items-center justify-center shadow-lg mb-3.5 overflow-hidden p-1.5">
-            <PgriLogo size={62} />
+            <PgriLogo size={90} />
           </div>
 
           <h1 className="text-[14px] font-bold tracking-wider text-white uppercase font-sans">

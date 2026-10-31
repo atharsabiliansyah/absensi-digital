@@ -14,10 +14,21 @@ class Kelas extends Model
     protected $fillable = [
         'nama_kelas',
         'jurusan',
+        'tipe_kelas',
     ];
 
     public function siswas()
     {
         return $this->hasMany(Siswa::class, 'kelas_id');
+    }
+
+    public function guru()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'guru_kelas',
+            'kelas_id',
+            'user_id'
+        )->withTimestamps();
     }
 }

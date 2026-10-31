@@ -32,6 +32,42 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
 }) => {
   const displayRecords = records.slice(0, 5);
 
+  const renderStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'Hadir':
+        return (
+          <span className="inline-block px-3.5 sm:px-5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#dcfce7] text-[#16a34a] tracking-tight">
+            Hadir
+          </span>
+        );
+      case 'Terlambat':
+        return (
+          <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#fef3c7] text-[#d97706] tracking-tight">
+            Terlambat
+          </span>
+        );
+      case 'Izin':
+        return (
+          <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#e0f2fe] text-[#0284c7] tracking-tight">
+            Izin
+          </span>
+        );
+      case 'Sakit':
+        return (
+          <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#f3e8ff] text-[#9333ea] tracking-tight">
+            Sakit
+          </span>
+        );
+      case 'Tidak Hadir':
+      default:
+        return (
+          <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#ffe4e6] text-[#e11d48] tracking-tight">
+            Tidak Hadir
+          </span>
+        );
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl sm:rounded-[24px] p-5 sm:p-8 shadow-xs border border-slate-100/90 flex flex-col justify-start">
       <div className="flex items-center justify-between pb-2 sm:pb-3">
@@ -58,7 +94,6 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
           <thead>
             <tr className="border-b border-slate-100/80 text-[11px] sm:text-[12px] font-semibold text-slate-400 tracking-wider uppercase">
               <th className="py-3 sm:py-4 px-3 sm:px-4 font-semibold whitespace-nowrap">MASUK</th>
-              <th className="py-3 sm:py-4 px-3 sm:px-4 font-semibold whitespace-nowrap">PULANG</th>
               <th className="py-3 sm:py-4 px-3 sm:px-4 font-semibold whitespace-normal sm:whitespace-nowrap leading-tight">
                 NAMA<br className="sm:hidden" /> SISWA
               </th>
@@ -70,21 +105,18 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
           <tbody className="divide-y divide-slate-100/60">
             {displayRecords.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-slate-400 text-xs sm:text-sm font-medium">
+                <td colSpan={5} className="py-8 text-center text-slate-400 text-xs sm:text-sm font-medium">
                   Belum ada presensi hari ini
                 </td>
               </tr>
             ) : (
               displayRecords.map((record) => {
-                const jamMasuk = record.waktu || record.waktu_masuk || '-';
-                const jamPulang = record.waktu_pulang || null;
+                const rawJam = record.waktu || record.waktu_masuk;
+                const jamMasuk = rawJam ? (rawJam.includes('WIB') ? rawJam : `${rawJam} WIB`) : '-';
 
                 const namaSiswa = record.siswa?.nama_siswa || record.nama || '-';
                 const kelasSiswa = record.siswa?.kelas?.nama_kelas || record.kelas || '-';
                 const jurusanSiswa = record.siswa?.kelas?.jurusan || record.jurusan || '-';
-
-                const isLate = record.status === 'Terlambat';
-                const isAbsent = record.status === 'Tidak Hadir';
 
                 return (
                   <tr
@@ -96,15 +128,7 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14px] text-slate-700 font-mono tracking-tight whitespace-nowrap font-semibold">
                       {jamMasuk}
                     </td>
-
-                    <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13px] sm:text-[14px] font-mono tracking-tight whitespace-nowrap">
-                      {jamPulang ? (
-                        <span className="text-blue-600 font-bold">{jamPulang}</span>
-                      ) : (
-                        <span className="text-slate-300 font-normal">-</span>
-                      )}
-                    </td>
-
+                    
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-[13.5px] sm:text-[15px] font-bold text-slate-900 whitespace-nowrap group-hover:text-blue-600 transition-colors">
                       {namaSiswa}
                     </td>
@@ -118,19 +142,7 @@ export const RecentAttendanceTable: React.FC<RecentAttendanceTableProps> = ({
                     </td>
 
                     <td className="py-3.5 sm:py-5 px-3 sm:px-4 text-right pr-4 sm:pr-6 whitespace-nowrap">
-                      {isLate ? (
-                        <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#fef3c7] text-[#d97706] tracking-tight">
-                          Terlambat
-                        </span>
-                      ) : isAbsent ? (
-                        <span className="inline-block px-3.5 sm:px-4.5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#ffe4e6] text-[#e11d48] tracking-tight">
-                          Tidak Hadir
-                        </span>
-                      ) : (
-                        <span className="inline-block px-3.5 sm:px-5 py-1 sm:py-1.5 text-[11.5px] sm:text-[13px] font-medium rounded-full bg-[#dcfce7] text-[#16a34a] tracking-tight">
-                          Hadir
-                        </span>
-                      )}
+                      {renderStatusBadge(record.status)}
                     </td>
                   </tr>
                 );

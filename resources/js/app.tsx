@@ -1,3 +1,4 @@
+
 /// <reference types="vite/client" />
 
 import './bootstrap';
@@ -5,21 +6,35 @@ import '../css/app.css';
 
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
-const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Absensi Digital - SMK 11 PGRI CILEDUG';
+const appName =
+    window.document.getElementsByTagName('title')[0]?.innerText ||
+    'Absensi Digital - SMK 11 PGRI CILEDUG';
+
+const pages = import.meta.glob('./Pages/**/*.{tsx,jsx}');
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.{tsx,jsx}');
-        const path = `./Pages/${name}.tsx` in pages ? `./Pages/${name}.tsx` : `./Pages/${name}.jsx`;
-        return resolvePageComponent(path, pages);
+
+    resolve: async (name) => {
+        const tsxPath = `./Pages/${name}.tsx`;
+        const jsxPath = `./Pages/${name}.jsx`;
+
+        const page = pages[tsxPath] ?? pages[jsxPath];
+
+        if (!page) {
+            throw new Error(
+                `Halaman "${name}" tidak ditemukan. Periksa nama dan lokasi file.`
+            );
+        }
+
+        return page();
     },
-    setup({ el, App, props }: { el: HTMLElement; App: React.ComponentType<any>; props: any }) {
-        const root = createRoot(el);
-        root.render(<App {...props} />);
+
+    setup({ el, App, props }) {
+        createRoot(el).render(<App {...props} />);
     },
+
     progress: {
         color: '#4B5563',
     },

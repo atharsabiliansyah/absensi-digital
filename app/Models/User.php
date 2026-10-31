@@ -17,11 +17,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'username',
-        'email',
-        'password',
-    ];
+    'name',
+    'username',
+    'email',
+    'password',
+    'nip', 
+    'role',
+];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,4 +47,25 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+public function kelasDiampu()
+{
+    return $this->belongsToMany(
+        \App\Models\Kelas::class,
+        'guru_kelas',
+        'user_id',
+        'kelas_id'
+    )->withTimestamps();
+}
+
+public function isSuperAdmin(): bool
+{
+    return $this->role === 'super_admin';
+}
+
+public function isGuru(): bool
+{
+    return $this->role === 'guru';
+}
+
 }

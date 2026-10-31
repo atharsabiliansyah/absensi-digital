@@ -27,13 +27,33 @@ class HandleInertiaRequests extends Middleware
      *
      * @return array<string, mixed>
      */
-    public function share(Request $request): array
-    {
-        return [
-            ...parent::share($request),
-            'auth' => [
-                'user' => $request->user(),
-            ],
-        ];
+  public function share(Request $request): array
+{
+    $resetStatus = 'none';
+    if ($user = $request->user()) {
+        $latestReset = \Illuminate\Support\Facades\DB::table('password_reset_requests')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        if ($latestReset) {
+            $resetStatus = $latestReset->status; 
+        }
     }
+
+    return array_merge(parent::share($request), [
+        'auth' => [
+            'user' => $request->user() ? [
+                'id'       => $request->user()->id,
+                'name'     => $request->user()->name,
+                'username' => $request->user()->username,
+                'email'    => $request->user()->email,
+                'nip'      => $request->user()->nip ?? '-',
+                'role'     => $request->user()->role ?? 'User',
+            ] : null,
+        ],
+        'resetStatus' => $resetStatus, 
+    ]);
 }
+}
+

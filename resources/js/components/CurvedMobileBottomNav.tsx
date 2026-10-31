@@ -27,15 +27,18 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
   const [navWidth, setNavWidth] = useState<number>(360);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        setNavWidth(containerRef.current.offsetWidth);
-      }
-    };
+    if (!containerRef.current) return;
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setNavWidth(entry.contentRect.width);
+        }
+      }
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
   }, []);
 
   const currentIndex = NAV_ITEMS.findIndex((item) => item.id === activeTab);
@@ -43,27 +46,30 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
   const activeIndex = isTabInNav ? currentIndex : 0;
 
   const numItems = NAV_ITEMS.length;
-  const itemWidth = navWidth > 0 ? navWidth / numItems : 120;
+  const W = navWidth || 360;
+  const itemWidth = W / numItems;
+  
   const cx = activeIndex * itemWidth + itemWidth / 2;
 
-  const W = navWidth || 360;
   const H = 76;
   const yBase = 20;
-  const yPeak = 2;
-  const rCorner = 24;
+  const yPeak = 3;
+  const rCorner = 20;
 
-  const waveRadius = 40;
-  const waveLeft = Math.max(rCorner, cx - waveRadius);
-  const waveRight = Math.min(W - rCorner, cx + waveRadius);
+  const wHalf = 36; 
 
-  // Continuous seamless liquid shape path
+  const leftX = Math.max(rCorner, cx - wHalf);
+  const rightX = Math.min(W - rCorner, cx + wHalf);
+
+  const spreadLeft = (cx - leftX) * 0.45;
+  const spreadRight = (rightX - cx) * 0.45;
+
   const liquidPath = isTabInNav
     ? `
     M ${rCorner} ${yBase}
-    L ${waveLeft} ${yBase}
-    C ${waveLeft + 14} ${yBase}, ${cx - 18} ${yPeak}, ${cx - 10} ${yPeak}
-    C ${cx - 4} ${yPeak - 2}, ${cx + 4} ${yPeak - 2}, ${cx + 10} ${yPeak}
-    C ${cx + 18} ${yPeak}, ${waveRight - 14} ${yBase}, ${waveRight} ${yBase}
+    L ${leftX} ${yBase}
+    C ${leftX + spreadLeft} ${yBase}, ${cx - spreadLeft} ${yPeak}, ${cx} ${yPeak}
+    C ${cx + spreadRight} ${yPeak}, ${rightX - spreadRight} ${yBase}, ${rightX} ${yBase}
     L ${W - rCorner} ${yBase}
     A ${rCorner} ${rCorner} 0 0 1 ${W} ${yBase + rCorner}
     L ${W} ${H - rCorner}
@@ -124,7 +130,6 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
           </div>
         )}
 
-        {/* 3 Tab Navigation Buttons */}
         <div className="relative z-10 grid grid-cols-3 h-[76px] pt-5">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
@@ -133,8 +138,9 @@ export const CurvedMobileBottomNav: React.FC<CurvedMobileBottomNavProps> = ({
             return (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => onSelectTab(item.id)}
-                className="flex flex-col items-center justify-end pb-3.5 cursor-pointer outline-hidden group relative"
+                className="flex flex-col items-center justify-end pb-3.5 cursor-pointer outline-none group relative"
               >
                 {!isActive ? (
                   <div className="text-slate-400 group-hover:text-slate-600 transition-colors mb-1">

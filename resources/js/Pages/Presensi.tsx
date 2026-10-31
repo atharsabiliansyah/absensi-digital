@@ -6,7 +6,7 @@ import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 export default function Presensi() {
     return (
         <AuthenticatedLayout>
-            <Head title="Presensi - Presensi Digital - SMK PGRI 11 CILEDUG" />
+            <Head title="Presensi " />
             <PresensiPageView />
         </AuthenticatedLayout>
     );

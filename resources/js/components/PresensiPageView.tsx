@@ -9,11 +9,13 @@ import {
 } from 'lucide-react';
 
 export interface PresensiItem {
+  id: number;
   no: number;
   nis: string;
   nama: string;
   kelas: string;
   jurusan: string;
+  tipeKelas: string;
   waktu: string;
   status: 'Hadir' | 'Terlambat' | 'Izin' | 'Tidak Hadir' | 'Sakit';
 }
@@ -35,6 +37,8 @@ export const PresensiPageView: React.FC = () => {
   const [tanggal, setTanggal] = useState<string>(getTodayString());
   const [jurusan, setJurusan] = useState<string>('Semua Jurusan');
   const [kelas, setKelas] = useState<string>('Semua Kelas');
+  const [tipeKelas, setTipeKelas] = useState<string>('Semua');
+  const [tipeKelases, setTipeKelases] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
@@ -50,21 +54,28 @@ export const PresensiPageView: React.FC = () => {
         tanggal,
         jurusan,
         kelas,
+        tipe_kelas: tipeKelas,
       });
 
       const response = await fetch(`/api/presensi-list?${params.toString()}`);
       if (response.ok) {
         const result = await response.json();
+
+        setTipeKelases(
+          (result.tipeKelases || []).map((item: string | number) => String(item))
+        );
         
         const formattedData: PresensiItem[] = (result.data || []).map((item: any, index: number) => ({
-          no: index + 1,
-          nis: item.siswa?.nisn || '-',
-          nama: item.siswa?.nama_siswa || '-',
-          kelas: item.siswa?.kelas?.nama_kelas || '-',
-          jurusan: item.siswa?.kelas?.jurusan || '-',
-          waktu: `${item.waktu} WIB`,
-          status: item.status || 'Hadir',
-        }));
+        no: index + 1,
+        id: item.id,
+        nis: item.siswa?.nisn || '-',
+        nama: item.siswa?.nama_siswa || '-',
+        kelas: item.siswa?.kelas?.nama_kelas || '-',
+        jurusan: item.siswa?.kelas?.jurusan || '-',
+        tipeKelas: String(item.siswa?.kelas?.tipe_kelas ?? item.siswa?.kelas?.tipeKelas ?? '-'),
+        waktu: item.waktu ? `${item.waktu} WIB` : '-',
+        status: item.status || 'Tidak Hadir',
+    }));
 
         setData(formattedData);
         setTotalSiswa(result.total || 0);
@@ -80,27 +91,43 @@ export const PresensiPageView: React.FC = () => {
     fetchPresensi();
   }, []);
 
-  const handleStatusChange = (no: number, newStatus: PresensiItem['status']) => {
+  const handleStatusChange = async (id: number, newStatus: PresensiItem['status']) => {
     let studentName = '';
-    setData((prev) =>
-      prev.map((item) => {
-        if (item.no === no) {
-          studentName = item.nama;
-          return { ...item, status: newStatus };
-        }
-        return item;
-      })
+    
+        setData((prev) =>
+        prev.map((item) => {
+            if (item.id === id) {
+                studentName = item.nama;
+                return { ...item, status: newStatus };
+            }
+            return item;
+        })
     );
 
+    
     setNotification({
-      visible: true,
-      studentName: studentName || 'Siswa',
+        visible: true,
+        studentName: studentName || 'Siswa',
     });
 
     setTimeout(() => {
-      setNotification((curr) => (curr ? { ...curr, visible: false } : null));
+        setNotification((curr) => (curr ? { ...curr, visible: false } : null));
     }, 4000);
-  };
+
+    
+    try {
+        await fetch(`/api/presensi/${id}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+            },
+            body: JSON.stringify({ status: newStatus }),
+        });
+    } catch (error) {
+        console.error('Gagal menyimpan perubahan ke database:', error);
+    }
+};
 
   const getAvatarTheme = (name: string) => {
     const initial = (name[0] || 'S').toUpperCase();
@@ -182,7 +209,7 @@ export const PresensiPageView: React.FC = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleStatusChange(item.no, option);
+                      handleStatusChange(item.id, option)
                       setOpenDropdownId(null);
                     }}
                     className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
@@ -232,8 +259,7 @@ export const PresensiPageView: React.FC = () => {
       <div className="block md:hidden space-y-4">
         <div className="bg-white rounded-[22px] shadow-xs border border-slate-100 p-4 space-y-3.5">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[#1d4ed8]" />
-            <h2 className="text-[14px] font-bold text-slate-900">List Presensi</h2>
+           <h2 className="text-[14px] font-bold text-slate-900">List Presensi</h2>
           </div>
 
           <div>
@@ -286,6 +312,25 @@ export const PresensiPageView: React.FC = () => {
                 <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
+
+            <div>
+              <label className="block text-[11.5px] font-medium text-slate-600 mb-1.5">
+                Tipe Kelas
+              </label>
+              <div className="relative">
+                <select
+                  value={tipeKelas}
+                  onChange={(e) => setTipeKelas(e.target.value)}
+                  className="w-full appearance-none bg-[#f1f5f9] border-none rounded-xl px-3.5 py-2.5 pr-8 text-[12px] font-semibold text-slate-800"
+                >
+                  <option value="Semua">Semua Tipe</option>
+                  {tipeKelases.map((tipe) => (
+                    <option key={tipe} value={tipe}>{tipe}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
           </div>
 
           <button
@@ -293,7 +338,6 @@ export const PresensiPageView: React.FC = () => {
             onClick={fetchPresensi}
             className="w-full mt-1 py-2.5 bg-[#0b2b68] hover:bg-[#081e4c] text-white text-[12.5px] font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer"
           >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Tampilkan</span>
           </button>
         </div>
@@ -384,6 +428,23 @@ export const PresensiPageView: React.FC = () => {
               </div>
             </div>
 
+            <div className="flex items-center gap-2">
+              <label className="text-[13px] text-slate-600 font-medium">Tipe Kelas</label>
+              <div className="relative">
+                <select
+                  value={tipeKelas}
+                  onChange={(e) => setTipeKelas(e.target.value)}
+                  className="appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2 pr-8 text-xs font-medium text-slate-700 cursor-pointer"
+                >
+                  <option value="Semua">Semua Tipe</option>
+                  {tipeKelases.map((tipe) => (
+                    <option key={tipe} value={tipe}>{tipe}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={fetchPresensi}
@@ -403,6 +464,7 @@ export const PresensiPageView: React.FC = () => {
                 <th className="py-4 px-5">Nama Siswa</th>
                 <th className="py-4 px-5">Kelas</th>
                 <th className="py-4 px-5">Jurusan</th>
+                <th className="py-4 px-5">Tipe Kelas</th>
                 <th className="py-4 px-5">Waktu</th>
                 <th className="py-4 pr-8 text-right">Status</th>
               </tr>
@@ -410,13 +472,13 @@ export const PresensiPageView: React.FC = () => {
             <tbody className="divide-y divide-slate-100/90 text-[13px]">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                  <td colSpan={8} className="py-8 text-center text-slate-400">
                     Memuat data presensi...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
                     Belum ada data presensi 
                   </td>
                 </tr>
@@ -428,6 +490,7 @@ export const PresensiPageView: React.FC = () => {
                     <td className="py-4 px-5 font-bold text-slate-900">{row.nama}</td>
                     <td className="py-4 px-5 text-slate-700 font-medium">{row.kelas}</td>
                     <td className="py-4 px-5 text-slate-700 font-medium">{row.jurusan}</td>
+                    <td className="py-4 px-5 text-slate-700 font-medium">{row.tipeKelas}</td>
                     <td className="py-4 px-5 text-slate-500 font-mono text-xs">{row.waktu}</td>
                     <td className="py-4 pr-8 text-right">{renderStatusBadge(row)}</td>
                   </tr>

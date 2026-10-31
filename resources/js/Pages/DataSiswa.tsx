@@ -6,7 +6,7 @@ import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 export default function DataSiswa() {
     return (
         <AuthenticatedLayout>
-            <Head title="Data Siswa - Presensi Digital - SMK PGRI 11 CILEDUG" />
+            <Head title="Data Siswa " />
             <DataSiswaPageView />
         </AuthenticatedLayout>
     );
